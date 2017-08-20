@@ -1,4 +1,4 @@
-package com.jhfactory.aospimagepick;
+package com.jhfactory.aospimagepick.sample;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

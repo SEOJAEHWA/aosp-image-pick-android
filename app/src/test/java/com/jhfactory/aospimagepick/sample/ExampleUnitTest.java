@@ -1,4 +1,4 @@
-package com.jhfactory.aospimagepick;
+package com.jhfactory.aospimagepick.sample;
 
 import org.junit.Test;
 
