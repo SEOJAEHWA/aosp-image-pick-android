@@ -1,6 +1,7 @@
 package com.jhfactory.aospimagepick.sample;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
@@ -12,26 +13,38 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.FileProvider;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
 
 public class PickImage {
 
     private static final String TAG = "PickImage";
 
-    public static final int REQ_CODE_PICK_IMAGE_FROM_CAMERA = 4100; //카메라 촬영
-    public static final int REQ_CODE_PICK_IMAGE_FROM_GALLERY = 4101; //앨범 선택
-    public static final int REQ_CODE_CROP_IMAGE = 4102;
+    private static final String[] permissions = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    public static final int REQ_CODE_PICK_IMAGE_FROM_CAMERA = 4101; //카메라 촬영
+    public static final int REQ_CODE_PICK_IMAGE_FROM_GALLERY = 4102; //앨범 선택
+    public static final int REQ_CODE_CROP_IMAGE = 4103;
+
+    public static final int REQ_CODE_PERMISSION_IMAGE_PICK = 4100;
 
     public static final int PROFILE_IMAGE_ASPECT_X = 1;
     public static final int PROFILE_IMAGE_ASPECT_Y = 1;
@@ -58,7 +71,7 @@ public class PickImage {
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in activity.");
         }
-        // TODO: 2017. 8. 20. check permissions
+        requestPermissions();
     }
 
     public PickImage(Fragment fragment, boolean doCrop) {
@@ -71,7 +84,7 @@ public class PickImage {
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in fragment.");
         }
-        // TODO: 2017. 8. 20. check permissions
+        requestPermissions();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -104,8 +117,53 @@ public class PickImage {
         }
     }
 
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    /**
+     *
+     */
+    public void requestPermissions() {
+        if (shouldShowRequestPermissionRationale()) {
+            Log.d(TAG, "shouldShowRequestPermissionRationale has been called.");
+//            return;
+        }
+        if (checkPermissions(activity)) {
+            Log.i(TAG, "All permissions are granted. Thanks");
+            return;
+        }
+        if (isOnFragment()) {
+            fragment.requestPermissions(permissions, REQ_CODE_PERMISSION_IMAGE_PICK);
+        }
+        else {
+            ActivityCompat.requestPermissions(activity, permissions, REQ_CODE_PERMISSION_IMAGE_PICK);
+        }
+    }
 
+    /**
+     * Callback for the result from requesting permissions. This method
+     * is invoked for every call on {@link #requestPermissions()}.
+     * <p>
+     * <strong>Note:</strong> It is possible that the permissions request interaction
+     * with the user is interrupted. In this case you will receive empty permissions
+     * and results arrays which should be treated as a cancellation.
+     * </p>
+     *
+     * @param requestCode The request code passed in {@link #requestPermissions()}.
+     * @param permissions The requested permissions. Never null.
+     * @param grantResults The grant results for the corresponding permissions
+     *     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
+     *     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
+     *
+     * @see #requestPermissions()
+     */
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQ_CODE_PERMISSION_IMAGE_PICK:
+                if (verifyPermission(permissions[0], permissions, grantResults)
+                        && verifyPermission(permissions[1], permissions, grantResults)) {
+                    Log.d(TAG, "Permissions are granted.");
+                }
+                break;
+        }
     }
 
     public void openCamera() {
@@ -152,8 +210,39 @@ public class PickImage {
         this.runImageCrop = runImageCrop;
     }
 
+    /**
+     *
+     * @return
+     */
     private boolean isOnFragment() {
         return fragment != null;
+    }
+
+    /**
+     *
+     * @param context
+     * @return
+     */
+    private boolean checkPermissions(Context context) {
+        return PermissionChecker.checkSelfPermission(context, permissions[0]) == PERMISSION_GRANTED
+                && PermissionChecker.checkSelfPermission(context, permissions[1]) == PERMISSION_GRANTED;
+    }
+
+    private boolean shouldShowRequestPermissionRationale() {
+        if (isOnFragment()) {
+            return fragment.shouldShowRequestPermissionRationale(permissions[0])
+                    || fragment.shouldShowRequestPermissionRationale(permissions[1]);
+        }
+        else {
+            return ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[0])
+                    || ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[1]);
+        }
+    }
+
+    private boolean verifyPermission(String targetPermission, @NonNull String[] permissions,
+                                     @NonNull int[] grantResults) {
+        int index = Arrays.asList(permissions).indexOf(targetPermission);
+        return index != -1 && grantResults[index] == PERMISSION_GRANTED;
     }
 
     /**
@@ -266,7 +355,7 @@ public class PickImage {
         intent.setDataAndType(imageUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        intent.putExtra("crop", "true");
+//        intent.putExtra("crop", "true");
         intent.putExtra("aspectX", PROFILE_IMAGE_ASPECT_X);
         intent.putExtra("aspectY", PROFILE_IMAGE_ASPECT_Y);
         intent.putExtra("outputX", PROFILE_IMAGE_OUTPUT_X);
@@ -275,6 +364,43 @@ public class PickImage {
         intent.putExtra("return-data", false);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, targetUri);
         intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+
+        /* REF.
+        public static final String KEY_CROPPED_RECT = "cropped-rect";
+        public static final String KEY_OUTPUT_X = "outputX";
+        public static final String KEY_OUTPUT_Y = "outputY";
+        public static final String KEY_SCALE = "scale";
+        public static final String KEY_SCALE_UP_IF_NEEDED = "scaleUpIfNeeded";
+        public static final String KEY_ASPECT_X = "aspectX";
+        public static final String KEY_ASPECT_Y = "aspectY";
+        public static final String KEY_SET_AS_WALLPAPER = "set-as-wallpaper";
+        public static final String KEY_RETURN_DATA = "return-data";
+        public static final String KEY_DATA = "data";
+        public static final String KEY_SPOTLIGHT_X = "spotlightX";
+        public static final String KEY_SPOTLIGHT_Y = "spotlightY";
+        public static final String KEY_SHOW_WHEN_LOCKED = "showWhenLocked";
+        public static final String KEY_OUTPUT_FORMAT = "outputFormat";
+
+        protected static CropExtras getExtrasFromIntent(Intent intent) {
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                return new CropExtras(extras.getInt(CropExtras.KEY_OUTPUT_X, 0),
+                        extras.getInt(CropExtras.KEY_OUTPUT_Y, 0),
+                        extras.getBoolean(CropExtras.KEY_SCALE, true) &&
+                                extras.getBoolean(CropExtras.KEY_SCALE_UP_IF_NEEDED, false),
+                        extras.getInt(CropExtras.KEY_ASPECT_X, 0),
+                        extras.getInt(CropExtras.KEY_ASPECT_Y, 0),
+                        extras.getBoolean(CropExtras.KEY_SET_AS_WALLPAPER, false),
+                        extras.getBoolean(CropExtras.KEY_RETURN_DATA, false),
+                        (Uri) extras.getParcelable(MediaStore.EXTRA_OUTPUT),
+                        extras.getString(CropExtras.KEY_OUTPUT_FORMAT),
+                        extras.getBoolean(CropExtras.KEY_SHOW_WHEN_LOCKED, false),
+                        extras.getFloat(CropExtras.KEY_SPOTLIGHT_X),
+                        extras.getFloat(CropExtras.KEY_SPOTLIGHT_Y));
+            }
+            return null;
+        }
+        */
         if (intent.resolveActivity(context.getPackageManager()) != null) {
             return intent;
         }
