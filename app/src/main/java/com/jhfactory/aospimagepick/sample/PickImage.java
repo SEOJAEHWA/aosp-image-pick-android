@@ -1,6 +1,7 @@
 package com.jhfactory.aospimagepick.sample;
 
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
@@ -38,42 +39,67 @@ public class PickImage {
     public static final int PROFILE_IMAGE_OUTPUT_Y = 600;
 
     public interface OnPickedImageUriCallback {
-        void onReceiveImageUri(Uri contentUri);
+        void onReceiveImageUri(int resultCode, @Nullable Uri contentUri);
     }
 
-    private boolean doImageCrop;
+    private FragmentActivity activity;
+    private Fragment fragment;
+    private boolean runImageCrop;
     private Uri contentUri;
     private OnPickedImageUriCallback callback;
 
+    // TODO: 2017-08-22 여러가지 옵션을 빌드해서 파라미터로 넘기는 방식으로 생성자 생성
     public PickImage(FragmentActivity activity, boolean doCrop) {
-        // TODO: 2017. 8. 20. check permissions
-        doImageCrop = doCrop;
+        this.activity = activity;
+        runImageCrop = doCrop;
         if (activity instanceof OnPickedImageUriCallback) {
             callback = (OnPickedImageUriCallback) activity;
         }
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in activity.");
         }
+        // TODO: 2017. 8. 20. check permissions
     }
 
     public PickImage(Fragment fragment, boolean doCrop) {
-        // TODO: 2017. 8. 20. check permissions
-        doImageCrop = doCrop;
+        this.activity = fragment.getActivity();
+        this.fragment = fragment;
+        runImageCrop = doCrop;
         if (fragment instanceof OnPickedImageUriCallback) {
             callback = (OnPickedImageUriCallback) fragment;
         }
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in fragment.");
         }
+        // TODO: 2017. 8. 20. check permissions
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            Log.e(TAG, "OnActivityResult code is not OK >> " + resultCode);
+            callback.onReceiveImageUri(resultCode, null);
+            return;
+        }
         switch (requestCode) {
             case REQ_CODE_PICK_IMAGE_FROM_CAMERA:
+                if (runImageCrop) {
+                    contentUri = cropImage(contentUri);
+                }
+                else {
+                    callback.onReceiveImageUri(resultCode, contentUri);
+                }
                 break;
             case REQ_CODE_PICK_IMAGE_FROM_GALLERY:
+                contentUri = pickSingleImageResult(data);
+                if (runImageCrop) {
+                    contentUri = cropImage(contentUri);
+                }
+                else {
+                    callback.onReceiveImageUri(resultCode, contentUri);
+                }
                 break;
             case REQ_CODE_CROP_IMAGE:
+                callback.onReceiveImageUri(resultCode, contentUri);
                 break;
         }
     }
@@ -82,9 +108,55 @@ public class PickImage {
 
     }
 
+    public void openCamera() {
+        Intent intent = getCameraIntent(activity);
+        if (intent == null) {
+            Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
+            return;
+        }
+        startActivityForResult(intent, REQ_CODE_PICK_IMAGE_FROM_CAMERA);
+    }
+
     /**
+     * Open default gallery, choose single image only.
+     */
+    public void openGallery() {
+        Intent intent = Intent.createChooser(getGalleryIntent(false), "Choose");
+        startActivityForResult(intent, REQ_CODE_PICK_IMAGE_FROM_GALLERY);
+    }
+
+    /**
+     * Open cropper(AOSP)
+     */
+    public Uri cropImage(Uri imageUri) {
+        Intent intent = getCropIntent(activity, imageUri);
+        if (intent == null) {
+            Log.e(TAG, "Cropper intent is null. Cannot launch Cropper app.");
+            return null;
+        }
+        startActivityForResult(intent, REQ_CODE_CROP_IMAGE);
+        return imageUri;
+    }
+
+    /**
+     * Get File object from image url that stored
      *
-     *
+     * @param imageUri Stored image uri
+     * @return File object
+     */
+    public File getFileFromUri(Uri imageUri) {
+        return new File(imageUri.getPath());
+    }
+
+    public void setRunImageCrop(boolean runImageCrop) {
+        this.runImageCrop = runImageCrop;
+    }
+
+    private boolean isOnFragment() {
+        return fragment != null;
+    }
+
+    /**
      * @param chooseMultiple If true, Choose images multiple. If not, Choose single image. Now, Always be false.
      * @return created intent instance.
      */
@@ -104,46 +176,14 @@ public class PickImage {
         return intent;
     }
 
-    /**
-     * Open default gallery
-     *
-     * @param activity caller activity
-     * @param reqCode Request code for OnActivityResult.
-     * @param chooseMultiple If true, Choose images multiple. If not, Choose single image. Now, Always be false.
-     */
-    public void openGallery(FragmentActivity activity, int reqCode, boolean chooseMultiple) {
-        Intent intent = getGalleryIntent(chooseMultiple);
-        activity.startActivityForResult(Intent.createChooser(intent, "Choose"), reqCode);
-    }
-
-    /**
-     * Open default gallery
-     *
-     * @param fragment caller fragment
-     * @param reqCode Request code for OnActivityResult.
-     * @param chooseMultiple If true, Choose images multiple. If not, Choose single image. Now, Always be false.
-     */
-    public void openGallery(Fragment fragment, int reqCode, boolean chooseMultiple) {
-        Intent intent = getGalleryIntent(chooseMultiple);
-        fragment.startActivityForResult(Intent.createChooser(intent, "Choose"), reqCode);
-    }
-
-    public void openGallery(FragmentActivity activity, int reqCode) {
-        openGallery(activity, reqCode, false);
-    }
-
-    public void openGallery(Fragment fragment, int reqCode) {
-        openGallery(fragment, reqCode, false);
-    }
-
-
     private Intent getCameraIntent(Context context) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
             File photoFile;
             try {
                 photoFile = createImageFileOnExternal(context, ".jpg");
-                String authority = "com.jhfactory.aospimagepick.sample.fileprovider";
+                String authority = context.getPackageName() + ".fileprovider";
+                Log.d(TAG, "authority: " + authority);
                 Uri photoUri = FileProvider.getUriForFile(context, authority, photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 contentUri = photoUri;
@@ -156,54 +196,13 @@ public class PickImage {
         return null;
     }
 
-    public void openCamera(FragmentActivity activity, int reqCode) {
-        Intent intent = getCameraIntent(activity);
-        if (intent != null) {
-            activity.startActivityForResult(intent, reqCode);
-        }
-    }
-
-    public void openCamera(Fragment fragment, int reqCode) {
-        Intent intent = getCameraIntent(fragment.getContext());
-        if (intent != null) {
-            fragment.startActivityForResult(intent, reqCode);
-        }
-    }
-
-    /**
-     * Open Image Capture app(AOSP)
-     *
-     * @param activity caller activity.
-     * @param reqCode Request code for OnActivityResult.
-     * @return image uri
-     */
-    /*@Nullable
-    public static Uri openCamera(FragmentActivity activity, int reqCode) {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
-            File photoFile;
-            try {
-                photoFile = createImageFileOnExternal(activity, ".jpg");
-                String authority = "com.jhfactory.aospimagepick.fileprovider";
-                Uri photoUri = FileProvider.getUriForFile(activity, authority, photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-                activity.startActivityForResult(takePictureIntent, reqCode);
-                return photoUri;
-            }
-            catch (IOException ex) {
-                return null;
-            }
-        }
-        return null;
-    }*/
-
     /**
      * Get first(single) image uri in list
      *
      * @param data result data
      * @return first image uri
      */
-    public Uri pickSingleImageResult(@NonNull Intent data) {
+    private Uri pickSingleImageResult(@NonNull Intent data) {
         List<Uri> imgList = pickImageResult(data);
         if (imgList == null) {
             return null;
@@ -218,7 +217,7 @@ public class PickImage {
      * @return Image uri list
      */
     @Nullable
-    public List<Uri> pickImageResult(@NonNull Intent data) {
+    private List<Uri> pickImageResult(@NonNull Intent data) {
         Log.d(TAG, "[onActivityResult] REQ_CODE_ACTIVITY_IMAGE_PICK");
         List<Uri> imgList = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -237,8 +236,7 @@ public class PickImage {
             }
         }
         else {
-            final ArrayList<Uri> imageUris = data.getParcelableArrayListExtra(
-                    Intent.EXTRA_STREAM);
+            final ArrayList<Uri> imageUris = data.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (imageUris != null) {
                 for (Uri uri : imageUris) {
                     Log.d(TAG, "### URI: " + uri.toString());
@@ -249,17 +247,10 @@ public class PickImage {
         return imgList;
     }
 
-    /**
-     * Open cropper(AOSP)
-     *
-     * @param activity caller activity.
-     * @param photoUri selected or captured
-     */
-    public Uri cropImage(FragmentActivity activity, Uri photoUri) {
-
+    private Intent getCropIntent(Context context, Uri imageUri) {
         Uri targetUri;
         try {
-            File photoFile = createImageFileOnExternal(activity, ".jpg");
+            File photoFile = createImageFileOnExternal(context, ".jpg");
             targetUri = Uri.fromFile(photoFile);
         }
         catch (IOException e) {
@@ -269,11 +260,10 @@ public class PickImage {
             return null;
         }
         Log.d(TAG, "Target Uri: " + targetUri);
-
-        activity.grantUriPermission("com.android.camera", photoUri,
+        context.grantUriPermission("com.android.camera", imageUri,
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
         Intent intent = new Intent("com.android.camera.action.CROP");
-        intent.setDataAndType(photoUri, "image/*");
+        intent.setDataAndType(imageUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.putExtra("crop", "true");
@@ -285,16 +275,25 @@ public class PickImage {
         intent.putExtra("return-data", false);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, targetUri);
         intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-        if (intent.resolveActivity(activity.getPackageManager()) != null) {
-            activity.startActivityForResult(intent, REQ_CODE_CROP_IMAGE);
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            return intent;
         }
-        return targetUri;
+        return null;
+    }
+
+    private void startActivityForResult(Intent intent, int reqCode) {
+        if (isOnFragment()) {
+            fragment.startActivityForResult(intent, reqCode);
+        }
+        else {
+            activity.startActivityForResult(intent, reqCode);
+        }
     }
 
     /**
      * Create temp file
      *
-     * @param context context
+     * @param context   context
      * @param extension file extension name
      * @return File that has been created.
      * @throws IOException Exception
@@ -305,15 +304,5 @@ public class PickImage {
         String imageFileName = timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return File.createTempFile(imageFileName, extension, storageDir);
-    }
-
-    /**
-     * Get File object from image url that stored
-     *
-     * @param imageUri Stored image uri
-     * @return File object
-     */
-    private File getFileFromUri(Uri imageUri) {
-        return new File(imageUri.getPath());
     }
 }

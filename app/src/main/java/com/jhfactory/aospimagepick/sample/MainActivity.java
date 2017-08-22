@@ -3,7 +3,10 @@ package com.jhfactory.aospimagepick.sample;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -11,6 +14,7 @@ import android.widget.ImageView;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         PickImage.OnPickedImageUriCallback {
 
+    private static final String TAG = "MainActivity";
     private PickImage pickImage;
 
     @Override
@@ -30,10 +34,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
-                pickImage.openCamera(this, PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA);
+                pickImage.openCamera();
                 break;
             case R.id.abtn_run_gallery_intent: // Gallery button has been clicked
-                pickImage.openGallery(this, PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY);
+                pickImage.openGallery();
                 break;
         }
     }
@@ -51,8 +55,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onReceiveImageUri(Uri contentUri) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 
+    @Override
+    public void onReceiveImageUri(int resultCode, @Nullable Uri contentUri) {
+        Log.i(TAG, "resultCode: " + resultCode);
+        Log.i(TAG, "onReceiveImageUri: " + contentUri);
+//        Log.i(TAG, "FilePath: " + pickImage.getFileFromUri(contentUri).);
     }
 
     /**
