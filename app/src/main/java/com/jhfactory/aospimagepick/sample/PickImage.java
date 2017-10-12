@@ -29,21 +29,28 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
-
 public class PickImage {
 
     private static final String TAG = "PickImage";
 
-    private static final String[] permissions = {
+    private static final String[] PERMISSIONS_CAMERA = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
+    };
+
+    private static final String[] PERMISSIONS_CROP = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    public static final int REQ_CODE_PICK_IMAGE_FROM_CAMERA = 4101; //카메라 촬영
-    public static final int REQ_CODE_PICK_IMAGE_FROM_GALLERY = 4102; //앨범 선택
-    public static final int REQ_CODE_CROP_IMAGE = 4103;
+    public static final int REQ_CODE_PICK_IMAGE_FROM_CAMERA = 4111; //카메라 촬영
+    public static final int REQ_CODE_PICK_IMAGE_FROM_GALLERY = 4121; //앨범 선택
+    public static final int REQ_CODE_CROP_IMAGE = 4131;
 
+    public static final int REQ_CODE_PERMISSION_IMAGE_PICK_CAMERA = 4110;
+    public static final int REQ_CODE_PERMISSION_IMAGE_PICK_CROP = 4130;
+    @Deprecated
     public static final int REQ_CODE_PERMISSION_IMAGE_PICK = 4100;
 
     public static final int PROFILE_IMAGE_ASPECT_X = 1;
@@ -62,6 +69,10 @@ public class PickImage {
     private OnPickedImageUriCallback callback;
 
     // TODO: 2017-08-22 여러가지 옵션을 빌드해서 파라미터로 넘기는 방식으로 생성자 생성
+    public PickImage(FragmentActivity activity) {
+        this(activity, false);
+    }
+
     public PickImage(FragmentActivity activity, boolean doCrop) {
         this.activity = activity;
         runImageCrop = doCrop;
@@ -71,7 +82,10 @@ public class PickImage {
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in activity.");
         }
-        requestPermissions();
+    }
+
+    public PickImage(Fragment fragment) {
+        this(fragment, false);
     }
 
     public PickImage(Fragment fragment, boolean doCrop) {
@@ -84,7 +98,6 @@ public class PickImage {
         else {
             throw new RuntimeException("OnPickedImageUriCallback must be implemented in fragment.");
         }
-        requestPermissions();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -118,55 +131,71 @@ public class PickImage {
     }
 
     /**
-     *
+     * @param permissions The requested permissions. Never null.
+     * @param reqCode     The request code passed in.
+     * @return
      */
-    public void requestPermissions() {
-        if (shouldShowRequestPermissionRationale()) {
+    private boolean requestPermissions(final String[] permissions, int reqCode) {
+        if (shouldShowRequestPermissionRationale(permissions)) {
             Log.d(TAG, "shouldShowRequestPermissionRationale has been called.");
-//            return;
         }
-        if (checkPermissions(activity)) {
+        if (checkPermissions(activity, permissions)) {
             Log.i(TAG, "All permissions are granted. Thanks");
-            return;
+            return true;
         }
         if (isOnFragment()) {
-            fragment.requestPermissions(permissions, REQ_CODE_PERMISSION_IMAGE_PICK);
+            fragment.requestPermissions(permissions, reqCode);
         }
         else {
-            ActivityCompat.requestPermissions(activity, permissions, REQ_CODE_PERMISSION_IMAGE_PICK);
+            ActivityCompat.requestPermissions(activity, permissions, reqCode);
         }
+        return false;
     }
 
     /**
      * Callback for the result from requesting permissions. This method
-     * is invoked for every call on {@link #requestPermissions()}.
+     * is invoked for every call on {@link #requestPermissions(String[], int)}.
      * <p>
      * <strong>Note:</strong> It is possible that the permissions request interaction
      * with the user is interrupted. In this case you will receive empty permissions
      * and results arrays which should be treated as a cancellation.
      * </p>
      *
-     * @param requestCode The request code passed in {@link #requestPermissions()}.
-     * @param permissions The requested permissions. Never null.
+     * @param requestCode  The request code passed in {@link #requestPermissions(String[], int)}.
+     * @param permissions  The requested permissions. Never null.
      * @param grantResults The grant results for the corresponding permissions
-     *     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
-     *     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
-     *
-     * @see #requestPermissions()
+     *                     which is either {@link android.content.pm.PackageManager#PERMISSION_GRANTED}
+     *                     or {@link android.content.pm.PackageManager#PERMISSION_DENIED}. Never null.
+     * @see #requestPermissions(String[], int)
      */
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQ_CODE_PERMISSION_IMAGE_PICK:
-                if (verifyPermission(permissions[0], permissions, grantResults)
-                        && verifyPermission(permissions[1], permissions, grantResults)) {
+                if (verifyPermission(permissions, grantResults)) {
                     Log.d(TAG, "Permissions are granted.");
+                    return;
                 }
+                break;
+            case REQ_CODE_PERMISSION_IMAGE_PICK_CAMERA:
+                if (!verifyPermission(permissions, grantResults)) {
+                    return;
+                }
+                openCamera();
+                break;
+            case REQ_CODE_PERMISSION_IMAGE_PICK_CROP:
+                if (!verifyPermission(permissions, grantResults)) {
+                    return;
+                }
+                cropImage(contentUri);
                 break;
         }
     }
 
     public void openCamera() {
+        if (!requestPermissions(PERMISSIONS_CAMERA, REQ_CODE_PERMISSION_IMAGE_PICK_CAMERA)) {
+            Log.e(TAG, "Camera permissions are not granted.");
+            return;
+        }
         Intent intent = getCameraIntent(activity);
         if (intent == null) {
             Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
@@ -179,6 +208,7 @@ public class PickImage {
      * Open default gallery, choose single image only.
      */
     public void openGallery() {
+        // Do not require permissions.
         Intent intent = Intent.createChooser(getGalleryIntent(false), "Choose");
         startActivityForResult(intent, REQ_CODE_PICK_IMAGE_FROM_GALLERY);
     }
@@ -187,6 +217,10 @@ public class PickImage {
      * Open cropper(AOSP)
      */
     public Uri cropImage(Uri imageUri) {
+        if (requestPermissions(PERMISSIONS_CROP, REQ_CODE_PERMISSION_IMAGE_PICK_CROP)) {
+            Log.e(TAG, "Crop permissions are not granted.");
+            return null;
+        }
         Intent intent = getCropIntent(activity, imageUri);
         if (intent == null) {
             Log.e(TAG, "Cropper intent is null. Cannot launch Cropper app.");
@@ -206,43 +240,69 @@ public class PickImage {
         return new File(imageUri.getPath());
     }
 
+    /**
+     * @param runImageCrop If true, run default cropper intent.
+     */
     public void setRunImageCrop(boolean runImageCrop) {
         this.runImageCrop = runImageCrop;
     }
 
     /**
-     *
-     * @return
+     * @return if this class instance is created on fragment, return true.
      */
     private boolean isOnFragment() {
         return fragment != null;
     }
 
     /**
-     *
-     * @param context
-     * @return
+     * @param context     context
+     * @param permissions The requested permissions. Never null.
+     * @return Result checkPermissions result.
      */
-    private boolean checkPermissions(Context context) {
-        return PermissionChecker.checkSelfPermission(context, permissions[0]) == PERMISSION_GRANTED
-                && PermissionChecker.checkSelfPermission(context, permissions[1]) == PERMISSION_GRANTED;
+    private boolean checkPermissions(Context context, final String[] permissions) {
+        for (String permission : permissions) {
+            if (PermissionChecker.checkSelfPermission(context, permission) != PermissionChecker.PERMISSION_GRANTED) {
+                Log.e(TAG, "[checkPermissions] " + permission + " is not granted.");
+                return false;
+            }
+        }
+        return true;
     }
 
-    private boolean shouldShowRequestPermissionRationale() {
+    /**
+     * @param permissions The requested permissions. Never null.
+     * @return Return shouldShowRequestPermissionRationale result.
+     */
+    private boolean shouldShowRequestPermissionRationale(final String[] permissions) {
+        boolean result = false;
         if (isOnFragment()) {
-            return fragment.shouldShowRequestPermissionRationale(permissions[0])
-                    || fragment.shouldShowRequestPermissionRationale(permissions[1]);
+            for (String permission : permissions) {
+                result = result || fragment.shouldShowRequestPermissionRationale(permission);
+            }
         }
         else {
-            return ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[0])
-                    || ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[1]);
+            for (String permission : permissions) {
+                result = result || ActivityCompat.shouldShowRequestPermissionRationale(activity, permission);
+            }
         }
+        return result;
     }
 
-    private boolean verifyPermission(String targetPermission, @NonNull String[] permissions,
-                                     @NonNull int[] grantResults) {
+    @Deprecated
+    private boolean verifyPermission(String targetPermission, @NonNull String[] permissions, @NonNull int[] grantResults) {
         int index = Arrays.asList(permissions).indexOf(targetPermission);
-        return index != -1 && grantResults[index] == PERMISSION_GRANTED;
+        return index != -1 && grantResults[index] == PermissionChecker.PERMISSION_GRANTED;
+    }
+
+    private boolean verifyPermission(@NonNull String[] permissions, @NonNull int[] grantResults) {
+        for (String permission : permissions) {
+            int index = Arrays.asList(permissions).indexOf(permission);
+            if (index == -1 || grantResults[index] != PermissionChecker.PERMISSION_GRANTED) {
+                Log.e(TAG, "[verifyPermission] " + permission + " is not granted.");
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -430,5 +490,13 @@ public class PickImage {
         String imageFileName = timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return File.createTempFile(imageFileName, extension, storageDir);
+    }
+
+    public Uri getContentUri() {
+        return contentUri;
+    }
+
+    public void setContentUri(Uri contentUri) {
+        this.contentUri = contentUri;
     }
 }
