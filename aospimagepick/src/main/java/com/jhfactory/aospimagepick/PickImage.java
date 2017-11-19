@@ -1,4 +1,4 @@
-package com.jhfactory.aospimagepick.sample;
+package com.jhfactory.aospimagepick;
 
 
 import android.Manifest;
@@ -192,10 +192,10 @@ public class PickImage {
     }
 
     public void openCamera() {
-        if (!requestPermissions(PERMISSIONS_CAMERA, REQ_CODE_PERMISSION_IMAGE_PICK_CAMERA)) {
-            Log.e(TAG, "Camera permissions are not granted.");
-            return;
-        }
+//        if (!requestPermissions(PERMISSIONS_CAMERA, REQ_CODE_PERMISSION_IMAGE_PICK_CAMERA)) {
+//            Log.e(TAG, "Camera permissions are not granted.");
+//            return;
+//        }
         Intent intent = getCameraIntent(activity);
         if (intent == null) {
             Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
@@ -217,10 +217,10 @@ public class PickImage {
      * Open cropper(AOSP)
      */
     public Uri cropImage(Uri imageUri) {
-        if (requestPermissions(PERMISSIONS_CROP, REQ_CODE_PERMISSION_IMAGE_PICK_CROP)) {
-            Log.e(TAG, "Crop permissions are not granted.");
-            return null;
-        }
+//        if (requestPermissions(PERMISSIONS_CROP, REQ_CODE_PERMISSION_IMAGE_PICK_CROP)) {
+//            Log.e(TAG, "Crop permissions are not granted.");
+//            return null;
+//        }
         Intent intent = getCropIntent(activity, imageUri);
         if (intent == null) {
             Log.e(TAG, "Cropper intent is null. Cannot launch Cropper app.");
@@ -309,6 +309,7 @@ public class PickImage {
      * @param chooseMultiple If true, Choose images multiple. If not, Choose single image. Now, Always be false.
      * @return created intent instance.
      */
+    @SuppressWarnings("SameParameterValue")
     private Intent getGalleryIntent(boolean chooseMultiple) {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -353,9 +354,6 @@ public class PickImage {
      */
     private Uri pickSingleImageResult(@NonNull Intent data) {
         List<Uri> imgList = pickImageResult(data);
-        if (imgList == null) {
-            return null;
-        }
         return imgList.get(0);
     }
 
@@ -365,7 +363,7 @@ public class PickImage {
      * @param data result data
      * @return Image uri list
      */
-    @Nullable
+    @NonNull
     private List<Uri> pickImageResult(@NonNull Intent data) {
         Log.d(TAG, "[onActivityResult] REQ_CODE_ACTIVITY_IMAGE_PICK");
         List<Uri> imgList = new ArrayList<>();
@@ -374,13 +372,13 @@ public class PickImage {
             if (clipData != null) {
                 for (int i = 0; i < clipData.getItemCount(); i++) {
                     Uri uri = clipData.getItemAt(i).getUri();
-                    Log.d(TAG, "### [getClipData] URI: " + uri.toString());
+                    Log.d(TAG, "### [getClipData] URI: " + uri);
                     imgList.add(uri);
                 }
             }
             else {
                 Uri uri = data.getData();
-                Log.d(TAG, "### [getData] URI: " + uri.toString());
+                Log.d(TAG, "### [getData] URI: " + uri);
                 imgList.add(uri);
             }
         }
@@ -388,7 +386,7 @@ public class PickImage {
             final ArrayList<Uri> imageUris = data.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (imageUris != null) {
                 for (Uri uri : imageUris) {
-                    Log.d(TAG, "### URI: " + uri.toString());
+                    Log.d(TAG, "### URI: " + uri);
                     imgList.add(uri);
                 }
             }
@@ -396,23 +394,26 @@ public class PickImage {
         return imgList;
     }
 
-    private Intent getCropIntent(Context context, Uri imageUri) {
-        Uri targetUri;
+    private Uri getImageTargetUri(Context context) {
         try {
             File photoFile = createImageFileOnExternal(context, ".jpg");
-            targetUri = Uri.fromFile(photoFile);
+            return Uri.fromFile(photoFile);
         }
         catch (IOException e) {
             return null;
         }
+    }
+
+    private Intent getCropIntent(Context context, @NonNull Uri pickedImageUri) {
+        Uri targetUri = getImageTargetUri(context);
         if (targetUri == null) {
             return null;
         }
         Log.d(TAG, "Target Uri: " + targetUri);
-        context.grantUriPermission("com.android.camera", imageUri,
+        context.grantUriPermission("com.android.camera", pickedImageUri,
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
         Intent intent = new Intent("com.android.camera.action.CROP");
-        intent.setDataAndType(imageUri, "image/*");
+        intent.setDataAndType(pickedImageUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 //        intent.putExtra("crop", "true");
@@ -462,6 +463,7 @@ public class PickImage {
         }
         */
         if (intent.resolveActivity(context.getPackageManager()) != null) {
+            contentUri = targetUri;
             return intent;
         }
         return null;
@@ -484,6 +486,7 @@ public class PickImage {
      * @return File that has been created.
      * @throws IOException Exception
      */
+    @SuppressWarnings("SameParameterValue")
     private File createImageFileOnExternal(Context context, String extension)
             throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());

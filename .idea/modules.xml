@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AospImagePick.iml" filepath="$PROJECT_DIR$/AospImagePick.iml" />
       <module fileurl="file://$PROJECT_DIR$/aosp-image-pick-android.iml" filepath="$PROJECT_DIR$/aosp-image-pick-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aospimagepick/aospimagepick.iml" filepath="$PROJECT_DIR$/aospimagepick/aospimagepick.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

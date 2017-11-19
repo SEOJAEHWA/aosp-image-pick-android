@@ -6,9 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+import com.jhfactory.aospimagepick.PickImage;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
@@ -16,6 +20,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = "MainActivity";
     private PickImage pickImage;
+    private AppCompatImageView pickedImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pickImage = new PickImage(this, true);
         findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
         findViewById(R.id.abtn_run_gallery_intent).setOnClickListener(this);
+        pickedImageView = findViewById(R.id.aiv_picked_image);
 
         // Request permissions
         // READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
@@ -54,22 +60,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PickImage.REQ_CODE_PERMISSION_IMAGE_PICK:
-                pickImage.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        switch (requestCode) {
+//            case PickImage.REQ_CODE_PERMISSION_IMAGE_PICK:
+//                pickImage.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//                break;
+//            default:
+//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        }
+//    }
 
     @Override
     public void onReceiveImageUri(int resultCode, @Nullable Uri contentUri) {
         Log.i(TAG, "resultCode: " + resultCode);
         Log.i(TAG, "onReceiveImageUri: " + contentUri);
 //        Log.i(TAG, "FilePath: " + pickImage.getFileFromUri(contentUri).);
+        Glide.with(this)
+                .load(contentUri)
+                .into(pickedImageView);
     }
 
     /**
