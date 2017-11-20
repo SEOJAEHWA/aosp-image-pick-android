@@ -1,25 +1,24 @@
 package com.jhfactory.aospimagepick.sample;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.jhfactory.aospimagepick.PickImage;
+import com.jhfactory.aospimagepick.AospPickImage;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        PickImage.OnPickedImageUriCallback {
+        AospPickImage.OnPickedImageUriCallback {
 
     private static final String TAG = "MainActivity";
-    private PickImage pickImage;
+    private AospPickImage aospPickImage;
     private AppCompatImageView pickedImageView;
 
     @Override
@@ -27,23 +26,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        pickImage = new PickImage(this, true);
+        Bundle imageCropExtras = new AospPickImage.ImageCropExtraBuilder()
+                .aspectRatio("16:9")
+//                .outputSize("300*300")
+                .outputFormat(Bitmap.CompressFormat.JPEG)
+                .build();
+        aospPickImage = new AospPickImage(this, imageCropExtras);
+
         findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
         findViewById(R.id.abtn_run_gallery_intent).setOnClickListener(this);
         pickedImageView = findViewById(R.id.aiv_picked_image);
-
-        // Request permissions
-        // READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
-                pickImage.openCamera();
+                aospPickImage.openCamera();
                 break;
             case R.id.abtn_run_gallery_intent: // Gallery button has been clicked
-                pickImage.openGallery();
+                aospPickImage.openGallery();
                 break;
         }
     }
@@ -51,55 +53,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
-            case PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
-            case PickImage.REQ_CODE_CROP_IMAGE:
-                pickImage.onActivityResult(requestCode, resultCode, data);
+            case AospPickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
+            case AospPickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
+            case AospPickImage.REQ_CODE_CROP_IMAGE:
+                aospPickImage.onActivityResult(requestCode, resultCode, data);
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        switch (requestCode) {
-//            case PickImage.REQ_CODE_PERMISSION_IMAGE_PICK:
-//                pickImage.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//                break;
-//            default:
-//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        }
-//    }
-
     @Override
     public void onReceiveImageUri(int resultCode, @Nullable Uri contentUri) {
         Log.i(TAG, "resultCode: " + resultCode);
         Log.i(TAG, "onReceiveImageUri: " + contentUri);
-//        Log.i(TAG, "FilePath: " + pickImage.getFileFromUri(contentUri).);
         Glide.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
-    }
-
-    /**
-     * Show rounded bitmap on image view.
-     *
-     * @param imageUri image uri you want to show
-     * @param imageView target view
-     */
-    private void showRoundedImageOnView(Uri imageUri, final ImageView imageView) {
-//        Glide.with(this)
-//                .load(imageUri)
-//                .asBitmap()
-//                .centerCrop()
-//                .into(new SimpleTarget<Bitmap>() {
-//                    @Override
-//                    public void onResourceReady(Bitmap resource,
-//                                                GlideAnimation<? super Bitmap> glideAnimation) {
-//                        Bitmap roundedBitmap = getRoundedBitmap(resource);
-//                        Log.d(TAG, "roundedBitmap : " + roundedBitmap);
-//                        imageView.setImageBitmap(roundedBitmap);
-//                    }
-//                });
     }
 }

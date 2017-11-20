@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.jhfactory.aospimagepick.sample.MainActivity">
@@ -32,7 +32,8 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/abtn_run_gallery_intent"
-        app:layout_constraintTop_toBottomOf="@+id/aiv_picked_image" />
+        app:layout_constraintTop_toBottomOf="@+id/aiv_picked_image"
+        tools:ignore="HardcodedText" />
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/abtn_run_gallery_intent"
@@ -43,6 +44,7 @@
         android:layout_marginTop="8dp"
         android:text="GALLERY"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/aiv_picked_image" />
+        app:layout_constraintTop_toBottomOf="@+id/aiv_picked_image"
+        tools:ignore="HardcodedText" />
 
 </android.support.constraint.ConstraintLayout>
