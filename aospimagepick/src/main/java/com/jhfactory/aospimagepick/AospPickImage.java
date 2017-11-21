@@ -64,14 +64,7 @@ public class AospPickImage {
 
     @SuppressWarnings("WeakerAccess, unused")
     public AospPickImage(Activity activity) {
-        this(activity, null);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public AospPickImage(Activity activity, @Nullable Bundle imageCropExtras) {
         this.activity = activity;
-        this.imageCropExtras = imageCropExtras;
-        runImageCrop = imageCropExtras != null;
         if (activity instanceof OnPickedImageUriCallback) {
             callback = (OnPickedImageUriCallback) activity;
         } else {
@@ -81,15 +74,8 @@ public class AospPickImage {
 
     @SuppressWarnings("WeakerAccess, unused")
     public AospPickImage(Fragment fragment) {
-        this(fragment, null);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public AospPickImage(Fragment fragment, @Nullable Bundle imageCropExtras) {
         this.activity = fragment.getActivity();
         this.fragment = fragment;
-        this.imageCropExtras = imageCropExtras;
-        runImageCrop = imageCropExtras != null;
         if (fragment instanceof OnPickedImageUriCallback) {
             callback = (OnPickedImageUriCallback) fragment;
         } else {
@@ -134,6 +120,15 @@ public class AospPickImage {
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public void openCamera() {
+        openCamera(null);
+    }
+
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public void openCamera(@Nullable Bundle imageCropExtras) {
+        runImageCrop = imageCropExtras != null;
+        if (runImageCrop) {
+            this.imageCropExtras = imageCropExtras;
+        }
         Intent intent = getCameraIntent(activity);
         if (intent == null) {
             Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
@@ -147,6 +142,18 @@ public class AospPickImage {
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
     public void openGallery() {
+        openGallery(null);
+    }
+
+    /**
+     * Open default gallery, choose single image only.
+     */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    public void openGallery(@Nullable Bundle imageCropExtras) {
+        runImageCrop = imageCropExtras != null;
+        if (runImageCrop) {
+            this.imageCropExtras = imageCropExtras;
+        }
         Intent intent = Intent.createChooser(getGalleryIntent(false), "Choose");
         startActivityForResult(intent, REQ_CODE_PICK_IMAGE_FROM_GALLERY);
     }
@@ -283,8 +290,12 @@ public class AospPickImage {
     }
 
     private Uri getImageTargetUri(Context context) {
+        if (imageCropExtras == null) {
+            throw new RuntimeException("ImageCropExtras is null.");
+        }
         try {
-            File photoFile = createImageFileOnExternal(context, ".jpg");
+            final String extension = "." + imageCropExtras.getString(KEY_OUTPUT_FORMAT);
+            File photoFile = createImageFileOnExternal(context, extension);
             return Uri.fromFile(photoFile);
         } catch (IOException e) {
             return null;
@@ -304,19 +315,19 @@ public class AospPickImage {
         //        private float mSpotlightX = 0;
         //        private float mSpotlightY = 0;
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder aspectX(@IntRange(from = 1) int aspectX) {
             this.mAspectX = aspectX;
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder aspectY(@IntRange(from = 1) int aspectY) {
             this.mAspectY = aspectY;
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder aspectRatio(@NonNull String aspectRatio) {
             String[] ratioArray = aspectRatio.split(":");
             if (ratioArray.length != 2) {
@@ -327,19 +338,19 @@ public class AospPickImage {
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder outputX(@IntRange(from = 1) int outputX) {
             this.mOutputX = outputX;
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder outputY(@IntRange(from = 1) int outputY) {
             this.mOutputY = outputY;
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder outputSize(@NonNull String outputSize) {
             String[] outputSizeArray = outputSize.split("\\*");
             if (outputSizeArray.length != 2) {
@@ -350,13 +361,13 @@ public class AospPickImage {
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder scale(boolean scale) {
             this.mScale = scale;
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused"})
+        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final ImageCropExtraBuilder outputFormat(Bitmap.CompressFormat format) {
             this.mOutputFormat = format;
             return this;
