@@ -108,26 +108,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onReceiveImageUri(int resultCode, @Nullable Uri contentUri) {
-        Log.i(TAG, "resultCode: " + resultCode);
-        Log.i(TAG, "onReceiveImageUri: " + contentUri);
+        Log.i(TAG, "[onReceiveImageUri] resultCode: " + resultCode);
+        Log.i(TAG, "[onReceiveImageUri] onReceiveImageUri: " + contentUri);
         if (contentUri != null) {
-            Log.i(TAG, "Uri scheme: " + contentUri.getScheme());
-            Log.i(TAG, "getLastPathSegment: " + contentUri.getLastPathSegment());
+            Log.i(TAG, "[onReceiveImageUri] Uri scheme: " + contentUri.getScheme());
+            Log.i(TAG, "[onReceiveImageUri] getLastPathSegment: " + contentUri.getLastPathSegment());
             if (TextUtils.equals(contentUri.getScheme(), "content")) {
                 dumpImageMetaData(contentUri);
             }
             try {
                 byte[] bytes = aospPickImage.getBytes(this, contentUri);
-                Log.e(TAG, "Bytes length: " + Formatter.formatFileSize(this, bytes.length));
-//                GlideApp.with(this)
-//                        .load(bytes)
-//                        .skipMemoryCache(true)
-//                        .into(pickedImageView);
+                String readableFileSize = Formatter.formatFileSize(this, bytes.length);
+                Log.i(TAG, "[onReceiveImageUri] Size: " + readableFileSize);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             String fileName = getFileNameFromUri(contentUri);
-            Log.e(TAG, "-- Image file name: " + fileName);
+            Log.e(TAG, "-- [onReceiveImageUri] Image file name: " + fileName);
         }
         GlideApp.with(this)
                 .load(contentUri)
@@ -159,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             if (cursor != null && cursor.moveToFirst()) {
                 String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                Log.i(TAG, "Display Name: " + displayName);
+                Log.d(TAG, "[dumpImageMetaData] Display Name: " + displayName);
                 int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
                 String size;
                 if (!cursor.isNull(sizeIndex)) {
@@ -167,7 +164,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     size = "Unknown";
                 }
-                Log.i(TAG, "Size: " + Formatter.formatFileSize(this, Long.valueOf(size)));
+                String readableFileSize = Formatter.formatFileSize(this, Long.valueOf(size));
+                Log.d(TAG, "[dumpImageMetaData] Size: " + readableFileSize);
             }
         } finally {
             if (cursor != null) {

@@ -488,6 +488,7 @@ public class AospPickImage {
      * @param filePath file path
      * @return If delete file success, return true. If not, return false.
      */
+    @SuppressWarnings("unused")
     private boolean deleteImageFileFromExternal(Context context, String filePath) {
         // TODO: Does file delete automatically? Not sure yet.
         return false;
