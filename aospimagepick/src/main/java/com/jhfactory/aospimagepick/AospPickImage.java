@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
@@ -18,8 +19,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -240,7 +245,7 @@ public class AospPickImage {
         return null;
     }
 
-    public Uri getUriForFile(Context context, File file) {
+    private Uri getUriForFile(Context context, File file) {
         String authority = context.getPackageName() + ".fileprovider";
         Log.d(TAG, "authority: " + authority);
         return FileProvider.getUriForFile(context, authority, file);
@@ -253,7 +258,6 @@ public class AospPickImage {
      * @return first image uri
      */
     private Uri pickSingleImageResult(@NonNull Intent data) {
-        Uri uri = data.getData();
         List<Uri> imgList = pickImageResult(data);
         return imgList.get(0);
     }
@@ -337,6 +341,7 @@ public class AospPickImage {
             if (ratioArray.length != 2) {
                 throw new IllegalArgumentException("Image aspect ratio String is not suitable. ex) \"16:9\" >>" + aspectRatio);
             }
+            // TODO: output x, y 와 aspect ratio 값이 있다면 비율이 동일한지 체크하고 맞지 않을 경우 에러를 출력
             this.mAspectX = Integer.valueOf(ratioArray[0]);
             this.mAspectY = Integer.valueOf(ratioArray[1]);
             return this;
@@ -423,6 +428,41 @@ public class AospPickImage {
         } else {
             activity.startActivityForResult(intent, reqCode);
         }
+    }
+
+    /**
+     * get bytes from content uri.
+     *
+     * @param context    context
+     * @param contentUri content uri
+     * @return byte array read from the inputStream.
+     * @throws IOException ioexception
+     */
+    public byte[] getBytes(@NonNull Context context, Uri contentUri) throws IOException {
+        ParcelFileDescriptor parcelFileDescriptor = context.getContentResolver().openFileDescriptor(contentUri, "r");
+        if (parcelFileDescriptor == null) {
+            return null;
+        }
+        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+        InputStream inputStream = new FileInputStream(fileDescriptor);
+
+        byte[] bytesResult;
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+        try {
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteBuffer.write(buffer, 0, len);
+            }
+            bytesResult = byteBuffer.toByteArray();
+        } finally {
+            // close the stream
+            try {
+                byteBuffer.close();
+            } catch (IOException ignored) { /* do nothing */ }
+        }
+        return bytesResult;
     }
 
     /**

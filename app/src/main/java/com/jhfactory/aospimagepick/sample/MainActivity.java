@@ -5,29 +5,22 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.constraint.Group;
 import android.support.design.widget.TextInputEditText;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.AppCompatImageView;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 
-import com.bumptech.glide.Glide;
 import com.jhfactory.aospimagepick.AospPickImage;
 
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
-import java.text.DecimalFormat;
+import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
@@ -120,38 +113,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (contentUri != null) {
             Log.i(TAG, "Uri scheme: " + contentUri.getScheme());
             Log.i(TAG, "getLastPathSegment: " + contentUri.getLastPathSegment());
-//            if (TextUtils.equals(contentUri.getScheme(), "file")) {
-//                contentUri = getUriForFile(getFileNameFromUri(contentUri));
-//            }
-//            else {
-//                retrieveFileInfo(contentUri);
-//            }
             if (TextUtils.equals(contentUri.getScheme(), "content")) {
                 dumpImageMetaData(contentUri);
-                String fileName = getFileNameFromUri(contentUri);
-//                Uri uri = getUriForFile(fileName);
-                ParcelFileDescriptor parcelFileDescriptor = null;
-                try {
-                    parcelFileDescriptor = getContentResolver().openFileDescriptor(contentUri, "r");
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-//                retrieveFileInfo(uri);
-                Log.e(TAG, "-- Image file name: " + fileName);
             }
+            try {
+                byte[] bytes = aospPickImage.getBytes(this, contentUri);
+                Log.e(TAG, "Bytes length: " + Formatter.formatFileSize(this, bytes.length));
+//                GlideApp.with(this)
+//                        .load(bytes)
+//                        .skipMemoryCache(true)
+//                        .into(pickedImageView);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String fileName = getFileNameFromUri(contentUri);
+            Log.e(TAG, "-- Image file name: " + fileName);
         }
-        Glide.with(this)
+        GlideApp.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
     }
 
-    private Uri getUriForFile(String fileName) {
-//        File newFile = new File(getFilesDir(), fileName);
-        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
-        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", newFile);
-    }
-
+//    private Uri getUriForFile(String fileName) {
+//        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
+//        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", newFile);
+//    }
 
     private String getFileNameFromUri(Uri contentUri) {
         if (getContentResolver() == null) {
@@ -169,71 +155,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void dumpImageMetaData(Uri uri) {
-        // The query, since it only applies to a single document, will only return
-        // one row. There's no need to filter, sort, or select fields, since we want
-        // all fields for one document.
         Cursor cursor = getContentResolver().query(uri, null, null, null, null, null);
-
         try {
-            // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
-            // "if there's anything to look at, look at it" conditionals.
             if (cursor != null && cursor.moveToFirst()) {
-
-                // Note it's called "Display Name".  This is
-                // provider-specific, and might not necessarily be the file name.
                 String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
                 Log.i(TAG, "Display Name: " + displayName);
                 int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
-                // If the size is unknown, the value stored is null.  But since an
-                // int can't be null in Java, the behavior is implementation-specific,
-                // which is just a fancy term for "unpredictable".  So as
-                // a rule, check if it's null before assigning to an int.  This will
-                // happen often:  The storage API allows for remote files, whose
-                // size might not be locally known.
                 String size;
                 if (!cursor.isNull(sizeIndex)) {
-                    // Technically the column stores an int, but cursor.getString()
-                    // will do the conversion automatically.
                     size = cursor.getString(sizeIndex);
                 } else {
                     size = "Unknown";
                 }
-                Log.i(TAG, "Size: " + getFormattedFileSize(Long.valueOf(size)));
+                Log.i(TAG, "Size: " + Formatter.formatFileSize(this, Long.valueOf(size)));
             }
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
         }
-    }
-
-    /*private void retrieveFileInfo(Uri contentUri) {
-        if (getContentResolver() == null) {
-            return;
-        }
-        Cursor returnCursor = getContentResolver().query(contentUri, null, null, null, null);
-        if (returnCursor == null) {
-            return;
-        }
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-        returnCursor.moveToFirst();
-        String fileName = returnCursor.getString(nameIndex);
-        Long fileSize = returnCursor.getLong(sizeIndex);
-        Log.i(TAG, "fileName: " + fileName);
-        Log.i(TAG, "fileSize: " + getFormattedFileSize(fileSize));
-        returnCursor.close();
-    }*/
-
-    private String getFormattedFileSize(long size) {
-        String hrSize;
-        double m = size / 1024.0 / 1024.0;
-        DecimalFormat dec = new DecimalFormat("0.00");
-        if (m > 1) {
-            hrSize = dec.format(m).concat(" MB");
-        } else {
-            hrSize = dec.format(size).concat(" KB");
-        }
-        return hrSize;
     }
 }
