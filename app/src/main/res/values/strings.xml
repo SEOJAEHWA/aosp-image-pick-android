@@ -1,6 +1,3 @@
 <resources>
     <string name="app_name">AospImagePick</string>
-    <string name="file_provider_authorities">com.jhfactory.aospimagepick.sample.fileprovider</string>
-    <string name="file_provider_ext_path_name">temp_images</string>
-    <string name="file_provider_ext_path">Android/data/com.jhfactory.aospimagepick.sample/files/Pictures</string>
 </resources>

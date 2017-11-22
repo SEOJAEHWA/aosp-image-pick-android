@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.constraint.Group;
@@ -23,6 +25,8 @@ import com.bumptech.glide.Glide;
 import com.jhfactory.aospimagepick.AospPickImage;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 
 
@@ -49,7 +53,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pickedImageView = findViewById(R.id.aiv_picked_image);
         cropGroup = findViewById(R.id.group_crop);
         cropCheckBox = findViewById(R.id.acb_do_crop);
-        cropCheckBox.setChecked(true);
+        cropCheckBox.setChecked(false);
+        cropGroup.setVisibility(View.GONE);
         cropCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -114,26 +119,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "onReceiveImageUri: " + contentUri);
         if (contentUri != null) {
             Log.i(TAG, "Uri scheme: " + contentUri.getScheme());
+            Log.i(TAG, "getLastPathSegment: " + contentUri.getLastPathSegment());
 //            if (TextUtils.equals(contentUri.getScheme(), "file")) {
 //                contentUri = getUriForFile(getFileNameFromUri(contentUri));
 //            }
 //            else {
 //                retrieveFileInfo(contentUri);
 //            }
-//            if (TextUtils.equals(contentUri.getScheme(), "content")) {
-//                contentUri = getUriForFile(getFileNameFromUri(contentUri));
-//                Log.e(TAG, "-- contentUri: " + contentUri);
-//            }
+            if (TextUtils.equals(contentUri.getScheme(), "content")) {
+                dumpImageMetaData(contentUri);
+                String fileName = getFileNameFromUri(contentUri);
+//                Uri uri = getUriForFile(fileName);
+                ParcelFileDescriptor parcelFileDescriptor = null;
+                try {
+                    parcelFileDescriptor = getContentResolver().openFileDescriptor(contentUri, "r");
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+//                retrieveFileInfo(uri);
+                Log.e(TAG, "-- Image file name: " + fileName);
+            }
         }
         Glide.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
     }
 
-//    private Uri getUriForFile(String fileName) {
-//        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
-//        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", newFile);
-//    }
+    private Uri getUriForFile(String fileName) {
+//        File newFile = new File(getFilesDir(), fileName);
+        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
+        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", newFile);
+    }
 
 
     private String getFileNameFromUri(Uri contentUri) {
@@ -151,7 +168,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return fileName;
     }
 
-    private void retrieveFileInfo(Uri contentUri) {
+    public void dumpImageMetaData(Uri uri) {
+        // The query, since it only applies to a single document, will only return
+        // one row. There's no need to filter, sort, or select fields, since we want
+        // all fields for one document.
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null, null);
+
+        try {
+            // moveToFirst() returns false if the cursor has 0 rows.  Very handy for
+            // "if there's anything to look at, look at it" conditionals.
+            if (cursor != null && cursor.moveToFirst()) {
+
+                // Note it's called "Display Name".  This is
+                // provider-specific, and might not necessarily be the file name.
+                String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                Log.i(TAG, "Display Name: " + displayName);
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                // If the size is unknown, the value stored is null.  But since an
+                // int can't be null in Java, the behavior is implementation-specific,
+                // which is just a fancy term for "unpredictable".  So as
+                // a rule, check if it's null before assigning to an int.  This will
+                // happen often:  The storage API allows for remote files, whose
+                // size might not be locally known.
+                String size;
+                if (!cursor.isNull(sizeIndex)) {
+                    // Technically the column stores an int, but cursor.getString()
+                    // will do the conversion automatically.
+                    size = cursor.getString(sizeIndex);
+                } else {
+                    size = "Unknown";
+                }
+                Log.i(TAG, "Size: " + getFormattedFileSize(Long.valueOf(size)));
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    /*private void retrieveFileInfo(Uri contentUri) {
         if (getContentResolver() == null) {
             return;
         }
@@ -167,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "fileName: " + fileName);
         Log.i(TAG, "fileSize: " + getFormattedFileSize(fileSize));
         returnCursor.close();
-    }
+    }*/
 
     private String getFormattedFileSize(long size) {
         String hrSize;

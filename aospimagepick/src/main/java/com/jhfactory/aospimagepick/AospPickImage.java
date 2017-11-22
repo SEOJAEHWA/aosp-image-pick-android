@@ -214,6 +214,7 @@ public class AospPickImage {
         intent.setType("image/*");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
         } else {
             intent.setAction(Intent.ACTION_GET_CONTENT);
         }
@@ -227,12 +228,8 @@ public class AospPickImage {
     private Intent getCameraIntent(Context context) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
-            File photoFile;
             try {
-                photoFile = createImageFileOnExternal(context, ".jpg");
-                String authority = context.getPackageName() + ".fileprovider";
-                Log.d(TAG, "authority: " + authority);
-                Uri photoUri = FileProvider.getUriForFile(context, authority, photoFile);
+                Uri photoUri = getUriForFile(context, createTempImageFileOnExternal(context, ".jpg"));
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 contentUri = photoUri;
                 return takePictureIntent;
@@ -243,6 +240,12 @@ public class AospPickImage {
         return null;
     }
 
+    public Uri getUriForFile(Context context, File file) {
+        String authority = context.getPackageName() + ".fileprovider";
+        Log.d(TAG, "authority: " + authority);
+        return FileProvider.getUriForFile(context, authority, file);
+    }
+
     /**
      * Get first(single) image uri in list
      *
@@ -250,6 +253,7 @@ public class AospPickImage {
      * @return first image uri
      */
     private Uri pickSingleImageResult(@NonNull Intent data) {
+        Uri uri = data.getData();
         List<Uri> imgList = pickImageResult(data);
         return imgList.get(0);
     }
@@ -295,7 +299,7 @@ public class AospPickImage {
         }
         try {
             final String extension = "." + imageCropExtras.getString(KEY_OUTPUT_FORMAT);
-            File photoFile = createImageFileOnExternal(context, extension);
+            File photoFile = createTempImageFileOnExternal(context, extension);
             return Uri.fromFile(photoFile);
         } catch (IOException e) {
             return null;
@@ -430,7 +434,7 @@ public class AospPickImage {
      * @throws IOException Exception
      */
     @SuppressWarnings("SameParameterValue")
-    private File createImageFileOnExternal(Context context, String extension) throws IOException {
+    private File createTempImageFileOnExternal(Context context, String extension) throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         String imageFileName = timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
