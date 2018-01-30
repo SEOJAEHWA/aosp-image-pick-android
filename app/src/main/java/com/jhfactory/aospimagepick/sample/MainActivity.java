@@ -1,11 +1,9 @@
 package com.jhfactory.aospimagepick.sample;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.constraint.Group;
 import android.support.design.widget.TextInputEditText;
@@ -19,28 +17,33 @@ import android.view.View;
 import android.widget.CompoundButton;
 
 import com.jhfactory.aospimagepick.AospPickImage;
+import com.jhfactory.aospimagepick.AospPickImage2;
+import com.jhfactory.aospimagepick.ImagePickUtils;
+import com.jhfactory.aospimagepick.request.CropRequest;
+import com.jhfactory.aospimagepick.request.GalleryRequest;
 
 import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        AospPickImage.OnPickedImageUriCallback {
+        AospPickImage.OnPickedImageUriCallback, AospPickImage2.OnPickedImageUriCallback {
 
-    private static final String TAG = "MainActivity";
-    private AospPickImage aospPickImage;
+    private static final String TAG = MainActivity.class.getSimpleName();
     private AppCompatImageView pickedImageView;
     private AppCompatCheckBox cropCheckBox;
     private TextInputEditText aspectRatioEditText;
     private TextInputEditText outputSizeEditText;
     private Group cropGroup;
 
+    /**
+     * Current picked photo Uri
+     */
+    private Uri mCurrentPhotoUri;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        aospPickImage = new AospPickImage(this);
-
         findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
         findViewById(R.id.abtn_run_gallery_intent).setOnClickListener(this);
         pickedImageView = findViewById(R.id.aiv_picked_image);
@@ -56,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         aspectRatioEditText = findViewById(R.id.tie_aspect_ratio);
         outputSizeEditText = findViewById(R.id.tie_output_size);
-
     }
 
     @Override
@@ -64,23 +66,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
                 if (cropCheckBox.isChecked()) {
-                    aospPickImage.openCamera(getImageCropExtras());
+                    mCurrentPhotoUri = AospPickImage2.cameraWithCrop(this);
                 } else {
-                    aospPickImage.openCamera();
+                    mCurrentPhotoUri = AospPickImage2.camera(this);
                 }
                 break;
             case R.id.abtn_run_gallery_intent: // Gallery button has been clicked
                 if (cropCheckBox.isChecked()) {
-                    aospPickImage.openGallery(getImageCropExtras());
+                    AospPickImage2.galleryWithCrop(this);
                 } else {
-                    aospPickImage.openGallery();
+                    AospPickImage2.gallery(this);
                 }
                 break;
         }
     }
 
     private Bundle getImageCropExtras() {
-        AospPickImage.ImageCropExtraBuilder builder = new AospPickImage.ImageCropExtraBuilder();
+        CropRequest.Builder builder = new CropRequest.Builder(this);
         String aspectRatio = aspectRatioEditText.getText().toString();
         if (!TextUtils.isEmpty(aspectRatio)) {
             builder.aspectRatio(aspectRatio);
@@ -91,16 +93,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         builder.scale(true);
         builder.outputFormat(Bitmap.CompressFormat.JPEG);
-        return builder.build();
+        return builder.build().toBundle();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case AospPickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
-            case AospPickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
-            case AospPickImage.REQ_CODE_CROP_IMAGE:
-                aospPickImage.onActivityResult(requestCode, resultCode, data);
+            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
+            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
+            case AospPickImage2.REQ_CODE_CROP_IMAGE:
+                AospPickImage2.onActivityResult(requestCode, resultCode, data, mCurrentPhotoUri, this);
+                break;
+            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP:
+                mCurrentPhotoUri = GalleryRequest.pickSingleImageResult(data);
+            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP:
+                mCurrentPhotoUri = AospPickImage2.crop(this, mCurrentPhotoUri, getImageCropExtras());
+                break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -114,63 +122,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.i(TAG, "[onReceiveImageUri] Uri scheme: " + contentUri.getScheme());
             Log.i(TAG, "[onReceiveImageUri] getLastPathSegment: " + contentUri.getLastPathSegment());
             if (TextUtils.equals(contentUri.getScheme(), "content")) {
-                dumpImageMetaData(contentUri);
+                ImagePickUtils.dumpImageMetaData(this, contentUri);
             }
             try {
-                byte[] bytes = aospPickImage.getBytes(this, contentUri);
+                byte[] bytes = ImagePickUtils.getBytes(this, contentUri);
                 String readableFileSize = Formatter.formatFileSize(this, bytes.length);
                 Log.i(TAG, "[onReceiveImageUri] Size: " + readableFileSize);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            String fileName = getFileNameFromUri(contentUri);
+            String fileName = ImagePickUtils.getFileNameFromUri(this, contentUri);
             Log.e(TAG, "-- [onReceiveImageUri] Image file name: " + fileName);
         }
         GlideApp.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
-    }
-
-//    private Uri getUriForFile(String fileName) {
-//        File newFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
-//        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", newFile);
-//    }
-
-    private String getFileNameFromUri(Uri contentUri) {
-        if (getContentResolver() == null) {
-            return null;
-        }
-        Cursor returnCursor = getContentResolver().query(contentUri, null, null, null, null);
-        if (returnCursor == null) {
-            return null;
-        }
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        returnCursor.moveToFirst();
-        String fileName = returnCursor.getString(nameIndex);
-        returnCursor.close();
-        return fileName;
-    }
-
-    public void dumpImageMetaData(Uri uri) {
-        Cursor cursor = getContentResolver().query(uri, null, null, null, null, null);
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-                String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                Log.d(TAG, "[dumpImageMetaData] Display Name: " + displayName);
-                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
-                String size;
-                if (!cursor.isNull(sizeIndex)) {
-                    size = cursor.getString(sizeIndex);
-                } else {
-                    size = "Unknown";
-                }
-                String readableFileSize = Formatter.formatFileSize(this, Long.valueOf(size));
-                Log.d(TAG, "[dumpImageMetaData] Size: " + readableFileSize);
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
+        mCurrentPhotoUri = null;
     }
 }

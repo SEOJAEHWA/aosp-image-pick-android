@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+@Deprecated
 public class AospPickImage {
 
     private static final String TAG = "AospPickImage";
