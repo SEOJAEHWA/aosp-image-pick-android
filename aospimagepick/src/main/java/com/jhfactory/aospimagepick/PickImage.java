@@ -4,6 +4,7 @@ package com.jhfactory.aospimagepick;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,6 +16,10 @@ import com.jhfactory.aospimagepick.request.GalleryRequest;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class PickImage {
 
@@ -25,20 +30,20 @@ public final class PickImage {
     public static final int REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP = 4122;
     public static final int REQ_CODE_CROP_IMAGE = 4131;
 
-//    private static Uri mCurrentPhotoUri;
+    private static Uri mCurrentPhotoUri;
 
     public interface OnPickedImageUriCallback {
-        void onReceiveImageUri(int resultCode, @Nullable Uri contentUri);
+        void onPickedImageUri(int resultCode, @Nullable Uri contentUri);
     }
 
-    public static Uri camera(@NonNull Activity host) {
+    public static void camera(@NonNull Activity host) {
         CameraRequest request = new CameraRequest.Builder(host).build();
-        return request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA);
+        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA);
     }
 
-    public static Uri cameraWithCrop(@NonNull Activity host) {
+    public static void cameraWithCrop(@NonNull Activity host) {
         CameraRequest request = new CameraRequest.Builder(host).build();
-        return request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
+        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
     }
 
     public static void gallery(@NonNull Activity host) {
@@ -51,45 +56,47 @@ public final class PickImage {
         request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP);
     }
 
-    public static Uri crop(@NonNull Activity host, @Nullable Uri currentPhotoUri, Bundle imageCropExtras) {
-        if (currentPhotoUri == null) {
+    public static void crop(@NonNull Activity host, Bundle imageCropExtras) {
+        if (mCurrentPhotoUri == null) {
             Log.e(TAG, "CurrentPhotoUri is null.");
-            return null;
+            return;
         }
         CropRequest request = new CropRequest.Builder(host).build();
-        return request.getHelper().requestCropImage(REQ_CODE_CROP_IMAGE, currentPhotoUri, imageCropExtras);
+        mCurrentPhotoUri = request.getHelper().requestCropImage(REQ_CODE_CROP_IMAGE, mCurrentPhotoUri, imageCropExtras);
     }
 
-    public static void onActivityResult(int requestCode, int resultCode, Intent data,
-                                       @Nullable Uri currentPhotoUri, @NonNull Object callback) {
+    public static void onActivityResult(int requestCode, int resultCode, Intent data, @NonNull Object callback) {
         if (resultCode != Activity.RESULT_OK) {
-            Log.e(TAG, "OnActivityResult code is not OK >> " + resultCode);
             if (callback instanceof OnPickedImageUriCallback) {
-                ((OnPickedImageUriCallback) callback).onReceiveImageUri(resultCode, null);
+                ((OnPickedImageUriCallback) callback).onPickedImageUri(resultCode, null);
             }
             return;
         }
         switch (requestCode) {
             case REQ_CODE_PICK_IMAGE_FROM_CAMERA:
                 if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceiveImageUri(resultCode, currentPhotoUri);
+                    ((OnPickedImageUriCallback) callback).onPickedImageUri(resultCode, mCurrentPhotoUri);
                 }
+                mCurrentPhotoUri = null;
                 break;
             case REQ_CODE_PICK_IMAGE_FROM_GALLERY:
                 if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceiveImageUri(resultCode, GalleryRequest.pickSinglePhotoUri(data));
+                    ((OnPickedImageUriCallback) callback).onPickedImageUri(resultCode, GalleryRequest.pickSinglePhotoUri(data));
                 }
+                mCurrentPhotoUri = null;
                 break;
             case REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP:
                 runCropAfterImagePickedMethods(callback, requestCode);
                 break;
             case REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP:
+                mCurrentPhotoUri = GalleryRequest.pickSinglePhotoUri(data);
                 runCropAfterImagePickedMethods(callback, requestCode);
                 break;
             case REQ_CODE_CROP_IMAGE:
                 if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceiveImageUri(resultCode, currentPhotoUri);
+                    ((OnPickedImageUriCallback) callback).onPickedImageUri(resultCode, mCurrentPhotoUri);
                 }
+                mCurrentPhotoUri = null;
                 break;
             default:
                 break;
@@ -104,30 +111,37 @@ public final class PickImage {
         while (clazz != null) {
             for (Method method : clazz.getDeclaredMethods()) {
                 CropAfterImagePicked ann = method.getAnnotation(CropAfterImagePicked.class);
-                if (ann != null) {
-                    // Check for annotated methods with matching request code.
-                    if (ann.requestCode() == requestCode) {
-                        // Method must be void so that we can invoke it
-                        if (method.getParameterTypes().length > 0) {
-                            throw new RuntimeException("Cannot execute method " + method.getName()
-                                    + " because it is non-void method and/or has input parameters.");
+                if (ann != null && getRequestCodeList(ann.requestCodes()).contains(requestCode)) {
+                    if (method.getParameterTypes().length > 0) {
+                        throw new RuntimeException("Cannot execute method " + method.getName()
+                                + " because it is non-void method and/or has input parameters.");
+                    }
+                    try {
+                        // Make method accessible if private
+                        if (!method.isAccessible()) {
+                            method.setAccessible(true);
                         }
-                        try {
-                            // Make method accessible if private
-                            if (!method.isAccessible()) {
-                                method.setAccessible(true);
-                            }
-                            method.invoke(object);
-                        } catch (IllegalAccessException e) {
-                            Log.e(TAG, "runDefaultMethod:IllegalAccessException", e);
-                        } catch (InvocationTargetException e) {
-                            Log.e(TAG, "runDefaultMethod:InvocationTargetException", e);
-                        }
+                        method.invoke(object);
+                    } catch (IllegalAccessException e) {
+                        Log.e(TAG, "runDefaultMethod:IllegalAccessException", e);
+                    } catch (InvocationTargetException e) {
+                        Log.e(TAG, "runDefaultMethod:InvocationTargetException", e);
                     }
                 }
             }
             clazz = clazz.getSuperclass();
         }
+    }
+
+    private static List<Integer> getRequestCodeList(final int[] requestCodes) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return Arrays.stream(requestCodes).boxed().collect(Collectors.<Integer>toList());
+        }
+        return new ArrayList<Integer>() {{
+            for (int i : requestCodes) {
+                add(i);
+            }
+        }};
     }
 
     private static boolean isUsingAndroidAnnotations(@NonNull Object object) {
