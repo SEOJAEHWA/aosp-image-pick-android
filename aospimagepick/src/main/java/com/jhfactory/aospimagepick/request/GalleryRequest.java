@@ -15,13 +15,12 @@ import com.jhfactory.aospimagepick.helper.PickImageHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GalleryRequest {
+public class GalleryRequest extends ImagePickRequest {
 
     private static final String TAG = GalleryRequest.class.getSimpleName();
-    private PickImageHelper mHelper;
 
-    public GalleryRequest(PickImageHelper helper) {
-        this.mHelper = helper;
+    GalleryRequest(PickImageHelper helper) {
+        super(helper);
     }
 
     /**
@@ -30,8 +29,8 @@ public class GalleryRequest {
      * @param data result data
      * @return first image uri
      */
-    public static Uri pickSingleImageResult(@NonNull Intent data) {
-        List<Uri> imgList = pickImageResult(data);
+    public static Uri pickSinglePhotoUri(@NonNull Intent data) {
+        List<Uri> imgList = pickPhotoUris(data);
         return imgList.get(0);
     }
 
@@ -42,7 +41,7 @@ public class GalleryRequest {
      * @return Image uri list
      */
     @NonNull
-    private static List<Uri> pickImageResult(@NonNull Intent data) {
+    private static List<Uri> pickPhotoUris(@NonNull Intent data) {
         List<Uri> imgList = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             final ClipData clipData = data.getClipData();
@@ -67,11 +66,6 @@ public class GalleryRequest {
             }
         }
         return imgList;
-    }
-
-    @NonNull
-    public PickImageHelper getHelper() {
-        return mHelper;
     }
 
     public static final class Builder {

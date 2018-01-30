@@ -70,7 +70,7 @@ public class ImagePickUtils {
      * @param file    absolute photo path File
      * @return Uri from file
      */
-    public static Uri getUriForFile(Context context, File file) {
+    private static Uri getUriForFile(Context context, File file) {
         String authority = context.getPackageName() + ".fileprovider";
         Log.d(TAG, "authority: " + authority);
         return FileProvider.getUriForFile(context, authority, file);
@@ -84,8 +84,9 @@ public class ImagePickUtils {
      * @return File that has been created.
      * @throws IOException Exception
      */
-    public static File createTempImageFileOnExternal(Context context, String extension) throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+    private static File createTempImageFileOnExternal(Context context, String extension) throws IOException {
+        final String pattern = "yyyyMMdd_HHmmss";
+        String timeStamp = new SimpleDateFormat(pattern, Locale.getDefault()).format(new Date());
         String imageFileName = timeStamp + "_";
         File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return File.createTempFile(imageFileName, extension, storageDir);

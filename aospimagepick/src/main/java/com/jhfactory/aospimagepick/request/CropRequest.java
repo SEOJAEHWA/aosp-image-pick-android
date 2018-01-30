@@ -3,14 +3,16 @@ package com.jhfactory.aospimagepick.request;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
-public class CropRequest {
+public class CropRequest extends ImagePickRequest {
 
     public static final String ACTION_CROP = "com.android.camera.action.CROP";
     private static final String KEY_CROPPED_RECT = "cropped-rect";
@@ -28,7 +30,6 @@ public class CropRequest {
     private static final String KEY_SHOW_WHEN_LOCKED = "showWhenLocked";
     public static final String KEY_OUTPUT_FORMAT = "outputFormat";
 
-    private PickImageHelper mHelper;
     private int mOutputX = 0;
     private int mOutputY = 0;
     private int mAspectX = 0;
@@ -40,12 +41,9 @@ public class CropRequest {
     //        private float mSpotlightX = 0;
     //        private float mSpotlightY = 0;
 
-    CropRequest(PickImageHelper mHelper,
-                int outputX, int outputY, int aspectX, int aspectY,
-                boolean scale,
-                boolean returnData,
-                Bitmap.CompressFormat outputFormat) {
-        this.mHelper = mHelper;
+    CropRequest(PickImageHelper helper, int outputX, int outputY, int aspectX, int aspectY,
+                boolean scale, boolean returnData, Bitmap.CompressFormat outputFormat) {
+        super(helper);
         this.mOutputX = outputX;
         this.mOutputY = outputY;
         this.mAspectX = aspectX;
@@ -53,11 +51,6 @@ public class CropRequest {
         this.mScale = scale;
         this.mReturnData = returnData;
         this.mOutputFormat = outputFormat;
-    }
-
-    @NonNull
-    public PickImageHelper getHelper() {
-        return mHelper;
     }
 
     public static final class Builder {

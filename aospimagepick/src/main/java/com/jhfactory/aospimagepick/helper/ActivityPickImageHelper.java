@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.jhfactory.aospimagepick.ImagePickUtils;
+import com.jhfactory.aospimagepick.R;
 import com.jhfactory.aospimagepick.request.CropRequest;
 
 public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
@@ -45,14 +46,14 @@ public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
             Log.e(TAG, "Gallery intent is null. Cannot launch camera app.");
             return;
         }
-        intent = Intent.createChooser(intent, "Choose");
+        intent = Intent.createChooser(intent, getContext().getString(R.string.pick_image_gallery_chooser));
         ActivityCompat.startActivityForResult(getHost(), intent, requestCode, null);
     }
 
     @Override
     public Uri requestCropImage(int requestCode, @NonNull Uri currentPhotoUri, Bundle imageCropExtras) {
         final String fileExtension = "." + imageCropExtras.getString(CropRequest.KEY_OUTPUT_FORMAT);
-        Uri targetUri = ImagePickUtils.getImageTargetUri(getContext(), fileExtension);
+        Uri targetUri = ImagePickUtils.getImageTargetUri2(getContext(), fileExtension);
         Log.d(TAG, "Current Uri: " + currentPhotoUri);
         Log.d(TAG, "Target Uri: " + targetUri);
         if (targetUri == null) {

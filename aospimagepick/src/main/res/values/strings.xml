@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AospImagePick</string>
+    <string name="pick_image_gallery_chooser">Choose</string>
 </resources>

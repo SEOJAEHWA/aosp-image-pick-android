@@ -17,7 +17,8 @@ import android.view.View;
 import android.widget.CompoundButton;
 
 import com.jhfactory.aospimagepick.AospPickImage;
-import com.jhfactory.aospimagepick.AospPickImage2;
+import com.jhfactory.aospimagepick.PickImage;
+import com.jhfactory.aospimagepick.CropAfterImagePicked;
 import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.request.CropRequest;
 import com.jhfactory.aospimagepick.request.GalleryRequest;
@@ -26,7 +27,7 @@ import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        AospPickImage.OnPickedImageUriCallback, AospPickImage2.OnPickedImageUriCallback {
+        AospPickImage.OnPickedImageUriCallback, PickImage.OnPickedImageUriCallback {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private AppCompatImageView pickedImageView;
@@ -66,16 +67,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
                 if (cropCheckBox.isChecked()) {
-                    mCurrentPhotoUri = AospPickImage2.cameraWithCrop(this);
+                    mCurrentPhotoUri = PickImage.cameraWithCrop(this);
                 } else {
-                    mCurrentPhotoUri = AospPickImage2.camera(this);
+                    mCurrentPhotoUri = PickImage.camera(this);
                 }
                 break;
             case R.id.abtn_run_gallery_intent: // Gallery button has been clicked
                 if (cropCheckBox.isChecked()) {
-                    AospPickImage2.galleryWithCrop(this);
+                    PickImage.galleryWithCrop(this);
                 } else {
-                    AospPickImage2.gallery(this);
+                    PickImage.gallery(this);
                 }
                 break;
         }
@@ -99,19 +100,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
-            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
-            case AospPickImage2.REQ_CODE_CROP_IMAGE:
-                AospPickImage2.onActivityResult(requestCode, resultCode, data, mCurrentPhotoUri, this);
+            case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
+            case PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
+            case PickImage.REQ_CODE_CROP_IMAGE:
+                PickImage.onActivityResult(requestCode, resultCode, data,
+                        mCurrentPhotoUri, this);
                 break;
-            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP:
-                mCurrentPhotoUri = GalleryRequest.pickSingleImageResult(data);
-            case AospPickImage2.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP:
-                mCurrentPhotoUri = AospPickImage2.crop(this, mCurrentPhotoUri, getImageCropExtras());
+            case PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP:
+                mCurrentPhotoUri = GalleryRequest.pickSinglePhotoUri(data);
+                PickImage.onActivityResult(requestCode, resultCode, data,
+                        mCurrentPhotoUri, this);
+                break;
+            case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP:
+                PickImage.onActivityResult(requestCode, resultCode, data,
+                        mCurrentPhotoUri, this);
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @CropAfterImagePicked(requestCode = PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP)
+    public void startCropIntentAfterGallery() {
+        mCurrentPhotoUri = PickImage.crop(this, mCurrentPhotoUri, getImageCropExtras());
+    }
+
+    @CropAfterImagePicked(requestCode = PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP)
+    public void startCropIntentAfterCamera() {
+        mCurrentPhotoUri = PickImage.crop(this, mCurrentPhotoUri, getImageCropExtras());
     }
 
     @Override
@@ -137,6 +153,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         GlideApp.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
-        mCurrentPhotoUri = null;
     }
 }
