@@ -15,8 +15,6 @@ import com.jhfactory.aospimagepick.request.CropRequest;
 
 public abstract class PickImageHelper<T> {
 
-    private static final String TAG = PickImageHelper.class.getSimpleName();
-
     private T mHost;
 
     public static PickImageHelper<? extends Activity> newInstance(Activity host) {
@@ -36,6 +34,8 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
+     *
+     *
      * @return get gallery app intent
      */
     @Nullable
@@ -59,6 +59,8 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
+     *
+     *
      * @return get camera app intent
      */
     @Nullable
@@ -72,19 +74,23 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
+     *
+     *
      * @param pickedImageUri picked image uri from camera or gallery
      * @param targetImageUri uri that would be stored cropped image file
      * @return get crop app intent
      */
     @Nullable
-    Intent getCropIntent(@NonNull Uri pickedImageUri, @NonNull Uri targetImageUri) {
+    Intent getCropIntent(@NonNull Uri pickedImageUri, @NonNull Uri targetImageUri, @Nullable Bundle extras) {
         final int permissionFlag = Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION;
         getContext().grantUriPermission("com.android.camera", targetImageUri, permissionFlag);
         Intent intent = new Intent(CropRequest.ACTION_CROP);
         intent.setDataAndType(pickedImageUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//        intent.putExtras(imageCropExtras);
+        if (extras != null) {
+            intent.putExtras(extras);
+        }
         intent.putExtra(MediaStore.EXTRA_OUTPUT, targetImageUri);
         if (intent.resolveActivity(getContext().getPackageManager()) != null) {
             return intent;
@@ -99,5 +105,5 @@ public abstract class PickImageHelper<T> {
 
     public abstract void requestOpenGallery(int requestCode);
 
-    public abstract Uri requestCropImage(int requestCode, Uri currentPhotoUri, Bundle imageCropExtras);
+    public abstract Uri requestCropImage(int requestCode, Uri currentPhotoUri, Bundle extras);
 }

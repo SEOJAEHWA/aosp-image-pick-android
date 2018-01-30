@@ -4,15 +4,17 @@ package com.jhfactory.aospimagepick.helper;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.R;
-import com.jhfactory.aospimagepick.request.CropRequest;
 
 public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
 
@@ -35,7 +37,7 @@ public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
             Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
             return null;
         }
-        ActivityCompat.startActivityForResult(getHost(), intent, requestCode, null);
+        startActivityForResult(intent, requestCode);
         return targetUri;
     }
 
@@ -47,12 +49,12 @@ public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
             return;
         }
         intent = Intent.createChooser(intent, getContext().getString(R.string.pick_image_gallery_chooser));
-        ActivityCompat.startActivityForResult(getHost(), intent, requestCode, null);
+        startActivityForResult(intent, requestCode);
     }
 
     @Override
-    public Uri requestCropImage(int requestCode, @NonNull Uri currentPhotoUri, Bundle imageCropExtras) {
-        final String fileExtension = "." + imageCropExtras.getString(CropRequest.KEY_OUTPUT_FORMAT);
+    public Uri requestCropImage(int requestCode, @NonNull Uri currentPhotoUri, @Nullable Bundle extras) {
+        final String fileExtension = "." + Bitmap.CompressFormat.JPEG;
         Uri targetUri = ImagePickUtils.getImageTargetUri2(getContext(), fileExtension);
         Log.d(TAG, "Current Uri: " + currentPhotoUri);
         Log.d(TAG, "Target Uri: " + targetUri);
@@ -60,13 +62,21 @@ public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
             Log.e(TAG, "Target Uri is null. return selected Uri.");
             return currentPhotoUri;
         }
-        Intent intent = getCropIntent(currentPhotoUri, targetUri);
+        Intent intent = getCropIntent(currentPhotoUri, targetUri, extras);
         if (intent == null) {
             Log.e(TAG, "Cropper intent is null. Cannot launch Cropper app.");
             return null;
         }
-        ActivityCompat.startActivityForResult(getHost(), intent, requestCode, null);
+        startActivityForResult(intent, requestCode);
         return targetUri;
+    }
+
+    private void startActivityForResult(Intent intent, int requestCode) {
+        if (getHost() instanceof AppCompatActivity) {
+            ActivityCompat.startActivityForResult(getHost(), intent, requestCode, null);
+        } else {
+            getHost().startActivityForResult(intent, requestCode);
+        }
     }
 
     @Override

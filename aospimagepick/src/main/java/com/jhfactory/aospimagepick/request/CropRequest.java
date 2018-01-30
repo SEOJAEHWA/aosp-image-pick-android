@@ -28,7 +28,7 @@ public class CropRequest extends ImagePickRequest {
     private static final String KEY_SPOTLIGHT_X = "spotlightX";
     private static final String KEY_SPOTLIGHT_Y = "spotlightY";
     private static final String KEY_SHOW_WHEN_LOCKED = "showWhenLocked";
-    public static final String KEY_OUTPUT_FORMAT = "outputFormat";
+    private static final String KEY_OUTPUT_FORMAT = "outputFormat";
 
     private int mOutputX = 0;
     private int mOutputY = 0;
@@ -127,18 +127,18 @@ public class CropRequest extends ImagePickRequest {
             return this;
         }
 
-        @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
+        /*@SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final Builder outputFormat(Bitmap.CompressFormat format) {
             this.mOutputFormat = format;
             return this;
-        }
+        }*/
 
-//        private double getAspectRatio() {
-//            if (mAspectX < 1 || mAspectY < 1) {
-//                return 0;
-//            }
-//            return (double) mAspectY / (double) mAspectX;
-//        }
+        /*private double getAspectRatio() {
+            if (mAspectX < 1 || mAspectY < 1) {
+                return 0;
+            }
+            return (double) mAspectY / (double) mAspectX;
+        }*/
 
         public CropRequest build() {
             return new CropRequest(mHelper, mOutputX, mOutputY, mAspectX, mAspectY, mScale,

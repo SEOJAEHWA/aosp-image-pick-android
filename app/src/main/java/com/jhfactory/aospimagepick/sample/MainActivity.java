@@ -1,9 +1,9 @@
 package com.jhfactory.aospimagepick.sample;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.Group;
@@ -15,6 +15,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
 
@@ -62,6 +64,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            currentPhotoUri = savedInstanceState.getParcelable("uri");
+            if (currentPhotoUri != null) {
+                Log.i(TAG, "onRestoreInstanceState::CurrentUri: " + currentPhotoUri);
+                showPickedImage(currentPhotoUri);
+            }
+        }
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
@@ -82,6 +96,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (currentPhotoUri != null) {
+            outState.putParcelable("uri", currentPhotoUri);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
@@ -96,7 +118,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private Bundle getImageCropExtras() {
+    @CropAfterImagePicked(requestCodes = {
+            PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP,
+            PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
+    public void startCropAfterImagePicked() {
         CropRequest.Builder builder = new CropRequest.Builder(this);
         String aspectRatio = aspectRatioEditText.getText().toString();
         if (!TextUtils.isEmpty(aspectRatio)) {
@@ -107,27 +132,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             builder.outputSize(outputSize);
         }
         builder.scale(true);
-        builder.outputFormat(Bitmap.CompressFormat.JPEG);
-        return builder.build().toBundle();
-    }
-
-    @CropAfterImagePicked(requestCodes = {
-            PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP,
-            PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
-    public void startCropAfterImagePicked() {
-        PickImage.crop(this, getImageCropExtras());
+        CropRequest request = builder.build();
+        PickImage.crop(this, request);
     }
 
     @Override
-    public void onPickedImageUri(int resultCode, @Nullable Uri contentUri) {
+    public void onReceivePickedImageUri(int resultCode, @Nullable Uri contentUri) {
         Log.i(TAG, "[onReceiveImageUri] resultCode: " + resultCode);
         Log.i(TAG, "[onReceiveImageUri] onReceiveImageUri: " + contentUri);
         if (contentUri == null) {
             Log.e(TAG, "content uri is null.");
             return;
         }
-        Log.i(TAG, "[onReceiveImageUri] Uri scheme: " + contentUri.getScheme());
-        Log.i(TAG, "[onReceiveImageUri] getLastPathSegment: " + contentUri.getLastPathSegment());
+        currentPhotoUri = contentUri;
+        showPickedImageInfo(contentUri);
+        showPickedImage(contentUri);
+    }
+
+    private void showPickedImageInfo(@NonNull Uri contentUri) {
+        Log.i(TAG, "[showPickedImageInfo] Uri scheme: " + contentUri.getScheme());
+        Log.i(TAG, "[showPickedImageInfo] getLastPathSegment: " + contentUri.getLastPathSegment());
         if (TextUtils.equals(contentUri.getScheme(), "content")) {
             ImagePickUtils.dumpImageMetaData(this, contentUri);
         }
@@ -136,19 +160,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (bytes != null) {
                 String readableFileSize;
                 readableFileSize = Formatter.formatFileSize(this, bytes.length);
-                Log.i(TAG, "[onReceiveImageUri] Size: " + readableFileSize);
+                Log.i(TAG, "[showPickedImageInfo] Size: " + readableFileSize);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        showPickedImage(contentUri);
     }
 
+    private Uri currentPhotoUri;
     private void showPickedImage(@NonNull Uri contentUri) {
         String fileName = ImagePickUtils.getFileNameFromUri(this, contentUri);
-        Log.i(TAG, "-- [onReceiveImageUri] Image file name: " + fileName);
+        Log.i(TAG, "-- [showPickedImage] Image file name: " + fileName);
         GlideApp.with(this)
                 .load(contentUri)
                 .into(pickedImageView);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_fragment) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
