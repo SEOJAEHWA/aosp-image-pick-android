@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(R.string.app_name);
+        toolbar.setTitle(R.string.activity_name_activity);
         setSupportActionBar(toolbar);
 
         findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
@@ -192,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_fragment) {
+            startActivity(new Intent(this, SampleFragmentActivity.class));
             return true;
         }
 
