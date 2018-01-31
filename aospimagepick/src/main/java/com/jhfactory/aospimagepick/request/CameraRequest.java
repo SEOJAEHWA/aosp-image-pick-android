@@ -3,6 +3,7 @@ package com.jhfactory.aospimagepick.request;
 
 import android.app.Activity;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
@@ -19,9 +20,13 @@ public final class CameraRequest extends ImagePickRequest {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 
-//        public Builder(@Nullable Fragment host) {
-//            this.mHelper = PickImageHelper.newInstance(host);
-//        }
+        public Builder(@Nullable android.support.v4.app.Fragment host) {
+            this.mHelper = PickImageHelper.newInstance(host);
+        }
+
+        public Builder(@Nullable android.app.Fragment host) {
+            this.mHelper = PickImageHelper.newInstance(host);
+        }
 
         public CameraRequest build() {
             return new CameraRequest(mHelper);

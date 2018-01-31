@@ -21,9 +21,13 @@ public abstract class PickImageHelper<T> {
         return new ActivityPickImageHelper(host);
     }
 
-//    public static PickImageHelper<? extends Fragment> newInstance(Fragment host) {
-//        return new PickImageHelper<>(host);
-//    }
+    public static PickImageHelper<? extends android.support.v4.app.Fragment> newInstance(android.support.v4.app.Fragment host) {
+        return new SupportFragmentPickImageHelper(host);
+    }
+
+    public static PickImageHelper<? extends android.app.Fragment> newInstance(android.app.Fragment host) {
+        return new FragmentPickImageHelper(host);
+    }
 
     PickImageHelper(T host) {
         this.mHost = host;
@@ -34,8 +38,6 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
-     *
-     *
      * @return get gallery app intent
      */
     @Nullable
@@ -59,8 +61,6 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
-     *
-     *
      * @return get camera app intent
      */
     @Nullable
@@ -74,18 +74,16 @@ public abstract class PickImageHelper<T> {
     }
 
     /**
-     *
-     *
-     * @param pickedImageUri picked image uri from camera or gallery
+     * @param pickedPhotoUri picked image uri from camera or gallery
      * @param targetImageUri uri that would be stored cropped image file
      * @return get crop app intent
      */
     @Nullable
-    Intent getCropIntent(@NonNull Uri pickedImageUri, @NonNull Uri targetImageUri, @Nullable Bundle extras) {
+    Intent getCropIntent(@NonNull Uri pickedPhotoUri, @NonNull Uri targetImageUri, @Nullable Bundle extras) {
         final int permissionFlag = Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION;
         getContext().grantUriPermission("com.android.camera", targetImageUri, permissionFlag);
         Intent intent = new Intent(CropRequest.ACTION_CROP);
-        intent.setDataAndType(pickedImageUri, "image/*");
+        intent.setDataAndType(pickedPhotoUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         if (extras != null) {

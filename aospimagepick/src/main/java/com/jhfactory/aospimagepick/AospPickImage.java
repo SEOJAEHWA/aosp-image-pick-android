@@ -61,20 +61,20 @@ public class AospPickImage {
     private Fragment fragment;
     private boolean runImageCrop;
     private Uri contentUri;
-    private OnPickedImageUriCallback callback;
+    private OnPickedPhotoUriCallback callback;
     private Bundle imageCropExtras;
 
-    public interface OnPickedImageUriCallback {
+    public interface OnPickedPhotoUriCallback {
         void onReceiveImageUri(int resultCode, @Nullable Uri contentUri);
     }
 
     @SuppressWarnings("WeakerAccess, unused")
     public AospPickImage(Activity activity) {
         this.activity = activity;
-        if (activity instanceof OnPickedImageUriCallback) {
-            callback = (OnPickedImageUriCallback) activity;
+        if (activity instanceof OnPickedPhotoUriCallback) {
+            callback = (OnPickedPhotoUriCallback) activity;
         } else {
-            throw new RuntimeException("OnPickedImageUriCallback must be implemented in activity.");
+            throw new RuntimeException("OnPickedPhotoUriCallback must be implemented in activity.");
         }
     }
 
@@ -82,10 +82,10 @@ public class AospPickImage {
     public AospPickImage(Fragment fragment) {
         this.activity = fragment.getActivity();
         this.fragment = fragment;
-        if (fragment instanceof OnPickedImageUriCallback) {
-            callback = (OnPickedImageUriCallback) fragment;
+        if (fragment instanceof OnPickedPhotoUriCallback) {
+            callback = (OnPickedPhotoUriCallback) fragment;
         } else {
-            throw new RuntimeException("OnPickedImageUriCallback must be implemented in fragment.");
+            throw new RuntimeException("OnPickedPhotoUriCallback must be implemented in fragment.");
         }
     }
 
@@ -408,11 +408,11 @@ public class AospPickImage {
         }
     }
 
-    private Intent getCropIntent(Context context, @NonNull Uri pickedImageUri, @NonNull Uri targetImageUri) {
+    private Intent getCropIntent(Context context, @NonNull Uri PickedPhotoUri, @NonNull Uri targetImageUri) {
         final int permissionFlag = Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION;
-        context.grantUriPermission("com.android.camera", pickedImageUri, permissionFlag);
+        context.grantUriPermission("com.android.camera", PickedPhotoUri, permissionFlag);
         Intent intent = new Intent(ACTION_CROP);
-        intent.setDataAndType(pickedImageUri, "image/*");
+        intent.setDataAndType(PickedPhotoUri, "image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.putExtras(imageCropExtras);

@@ -3,13 +3,11 @@ package com.jhfactory.aospimagepick.request;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
 public class CropRequest extends ImagePickRequest {
@@ -70,9 +68,13 @@ public class CropRequest extends ImagePickRequest {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 
-//        public Builder(@Nullable Fragment host) {
-//            this.mHelper = PickImageHelper.newInstance(host);
-//        }
+        public Builder(@Nullable android.support.v4.app.Fragment host) {
+            this.mHelper = PickImageHelper.newInstance(host);
+        }
+
+        public Builder(@Nullable android.app.Fragment host) {
+            this.mHelper = PickImageHelper.newInstance(host);
+        }
 
         @SuppressWarnings({"SameParameterValue", "unused", "UnusedReturnValue"})
         public final Builder aspectX(@IntRange(from = 1) int aspectX) {

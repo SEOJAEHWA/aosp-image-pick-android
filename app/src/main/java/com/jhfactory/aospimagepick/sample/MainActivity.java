@@ -3,7 +3,6 @@ package com.jhfactory.aospimagepick.sample;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.Group;
@@ -29,14 +28,16 @@ import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        PickImage.OnPickedImageUriCallback {
+        PickImage.OnPickedPhotoUriCallback {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private AppCompatImageView pickedImageView;
-    private AppCompatCheckBox cropCheckBox;
-    private TextInputEditText aspectRatioEditText;
-    private TextInputEditText outputSizeEditText;
-    private Group cropGroup;
+    private AppCompatImageView mPickedPhotoView;
+    private AppCompatCheckBox mCropCheckBox;
+    private TextInputEditText mAspectRatioEditText;
+    private TextInputEditText mOutputSizeEditText;
+    private Group mCropGroup;
+
+    private Uri currentPhotoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,19 +49,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
         findViewById(R.id.abtn_run_gallery_intent).setOnClickListener(this);
-        pickedImageView = findViewById(R.id.aiv_picked_image);
-        cropGroup = findViewById(R.id.group_crop);
-        cropCheckBox = findViewById(R.id.acb_do_crop);
-        cropCheckBox.setChecked(false);
-        cropGroup.setVisibility(View.GONE);
-        cropCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        mPickedPhotoView = findViewById(R.id.aiv_picked_image);
+        mCropGroup = findViewById(R.id.group_crop);
+        mCropCheckBox = findViewById(R.id.acb_do_crop);
+        mCropCheckBox.setChecked(false);
+        mCropGroup.setVisibility(View.GONE);
+        mCropCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                cropGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                mCropGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             }
         });
-        aspectRatioEditText = findViewById(R.id.tie_aspect_ratio);
-        outputSizeEditText = findViewById(R.id.tie_output_size);
+        mAspectRatioEditText = findViewById(R.id.tie_aspect_ratio);
+        mOutputSizeEditText = findViewById(R.id.tie_output_size);
     }
 
     @Override
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             currentPhotoUri = savedInstanceState.getParcelable("uri");
             if (currentPhotoUri != null) {
                 Log.i(TAG, "onRestoreInstanceState::CurrentUri: " + currentPhotoUri);
-                showPickedImage(currentPhotoUri);
+                showPickedPhoto(currentPhotoUri);
             }
         }
     }
@@ -79,14 +80,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.abtn_run_capture_intent: // Capture button has been clicked
-                if (cropCheckBox.isChecked()) {
+                if (mCropCheckBox.isChecked()) {
                     PickImage.cameraWithCrop(this);
                 } else {
                     PickImage.camera(this);
                 }
                 break;
             case R.id.abtn_run_gallery_intent: // Gallery button has been clicked
-                if (cropCheckBox.isChecked()) {
+                if (mCropCheckBox.isChecked()) {
                     PickImage.galleryWithCrop(this);
                 } else {
                     PickImage.gallery(this);
@@ -123,11 +124,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
     public void startCropAfterImagePicked() {
         CropRequest.Builder builder = new CropRequest.Builder(this);
-        String aspectRatio = aspectRatioEditText.getText().toString();
+        String aspectRatio = mAspectRatioEditText.getText().toString();
         if (!TextUtils.isEmpty(aspectRatio)) {
             builder.aspectRatio(aspectRatio);
         }
-        String outputSize = outputSizeEditText.getText().toString();
+        String outputSize = mOutputSizeEditText.getText().toString();
         if (!TextUtils.isEmpty(outputSize)) {
             builder.outputSize(outputSize);
         }
@@ -137,21 +138,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onReceivePickedImageUri(int resultCode, @Nullable Uri contentUri) {
-        Log.i(TAG, "[onReceiveImageUri] resultCode: " + resultCode);
-        Log.i(TAG, "[onReceiveImageUri] onReceiveImageUri: " + contentUri);
+    public void onReceivePickedPhotoUri(int resultCode, @Nullable Uri contentUri) {
+        Log.i(TAG, "[onReceivePickedPhotoUri] resultCode: " + resultCode);
+        Log.i(TAG, "[onReceivePickedPhotoUri] onReceiveImageUri: " + contentUri);
         if (contentUri == null) {
             Log.e(TAG, "content uri is null.");
             return;
         }
         currentPhotoUri = contentUri;
-        showPickedImageInfo(contentUri);
-        showPickedImage(contentUri);
+        showPickedPhotoInfo(contentUri);
+        showPickedPhoto(contentUri);
     }
 
-    private void showPickedImageInfo(@NonNull Uri contentUri) {
-        Log.i(TAG, "[showPickedImageInfo] Uri scheme: " + contentUri.getScheme());
-        Log.i(TAG, "[showPickedImageInfo] getLastPathSegment: " + contentUri.getLastPathSegment());
+    private void showPickedPhotoInfo(@NonNull Uri contentUri) {
+        Log.i(TAG, "[showPickedPhotoInfo] Uri scheme: " + contentUri.getScheme());
+        Log.i(TAG, "[showPickedPhotoInfo] getLastPathSegment: " + contentUri.getLastPathSegment());
         if (TextUtils.equals(contentUri.getScheme(), "content")) {
             ImagePickUtils.dumpImageMetaData(this, contentUri);
         }
@@ -160,20 +161,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (bytes != null) {
                 String readableFileSize;
                 readableFileSize = Formatter.formatFileSize(this, bytes.length);
-                Log.i(TAG, "[showPickedImageInfo] Size: " + readableFileSize);
+                Log.i(TAG, "[showPickedPhotoInfo] Size: " + readableFileSize);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private Uri currentPhotoUri;
-    private void showPickedImage(@NonNull Uri contentUri) {
+    private void showPickedPhoto(@NonNull Uri contentUri) {
         String fileName = ImagePickUtils.getFileNameFromUri(this, contentUri);
-        Log.i(TAG, "-- [showPickedImage] Image file name: " + fileName);
+        Log.i(TAG, "-- [showPickedPhoto] Image file name: " + fileName);
         GlideApp.with(this)
                 .load(contentUri)
-                .into(pickedImageView);
+                .into(mPickedPhotoView);
     }
 
     @Override

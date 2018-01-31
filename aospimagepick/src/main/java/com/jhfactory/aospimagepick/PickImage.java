@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.jhfactory.aospimagepick.request.CameraRequest;
@@ -32,11 +33,16 @@ public final class PickImage {
 
     private static Uri mCurrentPhotoUri;
 
-    public interface OnPickedImageUriCallback {
-        void onReceivePickedImageUri(int resultCode, @Nullable Uri contentUri);
+    public interface OnPickedPhotoUriCallback {
+        void onReceivePickedPhotoUri(int resultCode, @Nullable Uri contentUri);
     }
 
     public static void camera(@NonNull Activity host) {
+        CameraRequest request = new CameraRequest.Builder(host).build();
+        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA);
+    }
+
+    public static void camera(@NonNull Fragment host) {
         CameraRequest request = new CameraRequest.Builder(host).build();
         mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA);
     }
@@ -46,7 +52,17 @@ public final class PickImage {
         mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
     }
 
+    public static void cameraWithCrop(@NonNull Fragment host) {
+        CameraRequest request = new CameraRequest.Builder(host).build();
+        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
+    }
+
     public static void gallery(@NonNull Activity host) {
+        GalleryRequest request = new GalleryRequest.Builder(host).build();
+        request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY);
+    }
+
+    public static void gallery(@NonNull Fragment host) {
         GalleryRequest request = new GalleryRequest.Builder(host).build();
         request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY);
     }
@@ -56,7 +72,16 @@ public final class PickImage {
         request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP);
     }
 
+    public static void galleryWithCrop(@NonNull Fragment host) {
+        GalleryRequest request = new GalleryRequest.Builder(host).build();
+        request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP);
+    }
+
     public static void crop(@NonNull Activity host, CropRequest cropRequest) {
+        crop(host, mCurrentPhotoUri, cropRequest);
+    }
+
+    public static void crop(@NonNull Fragment host, CropRequest cropRequest) {
         crop(host, mCurrentPhotoUri, cropRequest);
     }
 
@@ -70,23 +95,33 @@ public final class PickImage {
                 currentPhotoUri, cropRequest.toBundle());
     }
 
+    @SuppressWarnings("WeakerAccess")
+    public static void crop(@NonNull Fragment host, Uri currentPhotoUri, CropRequest cropRequest) {
+        if (currentPhotoUri == null) {
+            Log.e(TAG, "CurrentPhotoUri is null.");
+            return;
+        }
+        mCurrentPhotoUri = cropRequest.getHelper().requestCropImage(REQ_CODE_CROP_IMAGE,
+                currentPhotoUri, cropRequest.toBundle());
+    }
+
     public static void onActivityResult(int requestCode, int resultCode, Intent data, @NonNull Object callback) {
         if (resultCode != Activity.RESULT_OK) {
-            if (callback instanceof OnPickedImageUriCallback) {
-                ((OnPickedImageUriCallback) callback).onReceivePickedImageUri(resultCode, null);
+            if (callback instanceof OnPickedPhotoUriCallback) {
+                ((OnPickedPhotoUriCallback) callback).onReceivePickedPhotoUri(resultCode, null);
             }
             return;
         }
         switch (requestCode) {
             case REQ_CODE_PICK_IMAGE_FROM_CAMERA:
-                if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceivePickedImageUri(resultCode, mCurrentPhotoUri);
+                if (callback instanceof OnPickedPhotoUriCallback) {
+                    ((OnPickedPhotoUriCallback) callback).onReceivePickedPhotoUri(resultCode, mCurrentPhotoUri);
                 }
                 mCurrentPhotoUri = null;
                 break;
             case REQ_CODE_PICK_IMAGE_FROM_GALLERY:
-                if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceivePickedImageUri(resultCode, GalleryRequest.pickSinglePhotoUri(data));
+                if (callback instanceof OnPickedPhotoUriCallback) {
+                    ((OnPickedPhotoUriCallback) callback).onReceivePickedPhotoUri(resultCode, GalleryRequest.pickSinglePhotoUri(data));
                 }
                 mCurrentPhotoUri = null;
                 break;
@@ -98,8 +133,8 @@ public final class PickImage {
                 runCropAfterImagePickedMethods(callback, requestCode);
                 break;
             case REQ_CODE_CROP_IMAGE:
-                if (callback instanceof OnPickedImageUriCallback) {
-                    ((OnPickedImageUriCallback) callback).onReceivePickedImageUri(resultCode, mCurrentPhotoUri);
+                if (callback instanceof OnPickedPhotoUriCallback) {
+                    ((OnPickedPhotoUriCallback) callback).onReceivePickedPhotoUri(resultCode, mCurrentPhotoUri);
                 }
                 mCurrentPhotoUri = null;
                 break;
