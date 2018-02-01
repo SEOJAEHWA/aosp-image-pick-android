@@ -1,9 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
-version = '0.9.0'
-group = 'com.jhfactory'
-
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
@@ -30,84 +27,64 @@ artifacts {
 publishing {
     publications {
         library(MavenPublication) {
-            groupId this.group
-            artifactId "aospimagepick"
-            version this.version
+            groupId bintray_info.group
+            artifactId bintray_info.artifactId
+            version bintray_info.version
 
-            artifact "$buildDir/outputs/aar/aospimagepick-release.aar"
+            artifact "$buildDir/outputs/aar/$bintray_info.artifactId-release.aar"
             artifact sourcesJar
-//            artifact javadocJar
+            artifact javadocJar
 
             pom.withXml {
-                // Name
-                asNode().appendNode('name', "aosp-image-pick-android")
-
-                // Description
-                asNode().appendNode('description', 'Pick image by Using AOSP Camera, Gallery, Crop')
-
-                // URL
-                asNode().appendNode('url', 'https://github.com/SEOJAEHWA/aosp-image-pick-android')
-
-                // Licenses
-                def license = asNode().appendNode('licenses').appendNode('license')
+                def root = asNode()
+                root.appendNode('name', bintray_info.project_name)
+                root.appendNode('description', bintray_info.project_desc)
+                root.appendNode('url', bintray_info.url)
+                root.appendNode('inceptionYear', '2017')
+                def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'The Apache Software License, Version 2.0')
                 license.appendNode('url', 'http://www.apache.org/licenses/LICENSE-2.0.txt')
                 license.appendNode('distribution', 'repo')
-
-                // Developers
-                def developer = asNode().appendNode('developers').appendNode('developer')
+                def developer = root.appendNode('developers').appendNode('developer')
                 developer.appendNode('name', 'SEOJAEHWA')
-
-                // SCM
-//                def scm = asNode().appendNode('scm')
-//                scm.appendNode('connection', 'https://github.com/SEOJAEHWA/aosp-image-pick-android.git')
-//                scm.appendNode('url', 'https://github.com/SEOJAEHWA/aosp-image-pick-android')
-
-                // Dependencies
-                def dependenciesNode = asNode().getAt('dependencies')[0]
+                def scm = root.appendNode('scm')
+                scm.appendNode('connection', bintray_info.vcs_url)
+                scm.appendNode('url', bintray_info.url)
+                def dependenciesNode = root.getAt('dependencies')[0]
                 if (dependenciesNode == null) {
-                    dependenciesNode = asNode().appendNode('dependencies')
+                    dependenciesNode = root.appendNode('dependencies')
                 }
-
-                // Add all that are 'compile'
                 configurations.api.allDependencies.each {
                     def dependencyNode = dependenciesNode.appendNode('dependency')
                     dependencyNode.appendNode('groupId', it.group)
                     dependencyNode.appendNode('artifactId', it.name)
                     dependencyNode.appendNode('version', it.version)
                 }
-                /*def root = asNode()
-                root.appendNode('name', 'AospImagePick')
-                root.appendNode('description', 'Pick image by Using AOSP Camera, Gallery, Crop.')
-                root.appendNode('url', 'https://github.com/SEOJAEHWA/aosp-image-pick-android')
-                root.children().last() + pomConfig*/
             }
         }
     }
 }
 
 bintray {
-    user = "seojaehwa"
-    key = "42002a31ad666ac3f10036a67bc6ccd07ba1ca33"
-//    user = project.hasProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
-//    key = project.hasProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
     publications = ['library']
-    configurations = [ 'archives' ]
+    configurations = ['archives']
     override = true
     pkg {
-        repo = "aosp-image-pick-android"
-        name = "aospimagepick"
+        repo = bintray_info.project_name
+        name = bintray_info.artifactId
 //        description = "Pick image by Using AOSP Camera, Gallery, Crop"
         publish = true
         publicDownloadNumbers = true
-        userOrg = "jhfactory"
-        licenses = [ 'Apache-2.0' ]
-        vcsUrl = "https://github.com/SEOJAEHWA/aosp-image-pick-android.git"
+        userOrg = bintray_info.user_org
+        licenses = ['Apache-2.0']
+        vcsUrl = bintray_info.vcs_url
 
         version {
-            name = this.version
+            name = bintray_info.version
             released = new Date()
-            vcsTag = this.version
+//            vcsTag = bintray_info.version
         }
     }
 }

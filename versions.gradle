@@ -1,0 +1,68 @@
+ext.deps = [:]
+
+def build_version = [:]
+build_version.min_sdk = 16
+build_version.target_sdk = 27
+build_version.build_tools = "27.0.3"
+build_version.code = 1
+build_version.name = "1.0.0"
+build_version.aospimagepick_code = 2
+build_version.aospimagepick_name = "0.9.1"
+ext.build_version = build_version
+
+def bintray = [:]
+bintray.version = build_version.aospimagepick_name
+bintray.group = "com.jhfacotry"
+bintray.artifactId = "aospimagepick"
+bintray.project_name = "aosp-image-pick-android"
+bintray.project_desc = "Pick image by Using AOSP Camera, Gallery, Crop"
+bintray.url = "https://github.com/SEOJAEHWA/aosp-image-pick-android"
+bintray.vcs_url = "https://github.com/SEOJAEHWA/aosp-image-pick-android.git"
+bintray.user_org = "seojaehwa"
+ext.bintray_info = bintray
+
+def versions = [:]
+versions.support = "27.0.2"
+versions.constraint_layout = "1.1.0-beta4"
+versions.glide = "4.4.0"
+versions.junit = "4.12"
+versions.atsl_runner = "1.0.1"
+versions.espresso = "3.0.1"
+versions.android_gradle = "3.0.1"
+versions.maven_gradle = "2.0"
+versions.bintray_gradle = "1.8.0"
+
+def deps = [:]
+
+def support = [:]
+support.appcompat = "com.android.support:appcompat-v7:$versions.support"
+support.design = "com.android.support:design:$versions.support"
+support.annotations = "com.android.support:support-annotations:$versions.support"
+deps.support = support
+
+def glide = [:]
+glide.runtime = "com.github.bumptech.glide:glide:$versions.glide"
+glide.compiler = "com.github.bumptech.glide:compiler:$versions.glide"
+deps.glide = glide
+
+def atsl = [:]
+atsl.runner = "com.android.support.test:runner:$versions.atsl_runner"
+deps.atsl = atsl
+deps.junit = "junit:junit:$versions.junit"
+
+def espresso = [:]
+espresso.core = "com.android.support.test.espresso:espresso-core:$versions.espresso"
+deps.espresso = espresso
+
+deps.constraint_layout = "com.android.support.constraint:constraint-layout:$versions.constraint_layout"
+deps.android_gradle = "com.android.tools.build:gradle:$versions.android_gradle"
+deps.maven_gradle = "com.github.dcendents:android-maven-gradle-plugin:$versions.maven_gradle"
+deps.bintray_gradle = "com.jfrog.bintray.gradle:gradle-bintray-plugin:$versions.bintray_gradle"
+ext.deps = deps
+
+static def addRepos(RepositoryHandler handler) {
+    handler.google()
+    handler.jcenter()
+}
+
+ext.addRepos = this.&addRepos
