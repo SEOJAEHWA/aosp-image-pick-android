@@ -58,6 +58,3 @@ gen-external-apklibs
 .svn/
 aospimagepick/libs/
 aospimagepick/src/main/res/drawable/
-
-# Do not tracking these files
-gradle.properties
