@@ -12,7 +12,7 @@ ext.build_version = build_version
 
 def bintray = [:]
 bintray.version = build_version.lib_name
-bintray.group = "com.jhfacotry"
+bintray.group = "com.jhfactory"
 bintray.artifactId = "aospimagepick"
 bintray.project_name = "aosp-image-pick-android"
 bintray.project_desc = "Pick image by Using AOSP Camera, Gallery, Crop"
