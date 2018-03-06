@@ -34,7 +34,7 @@ public class SampleFragment extends android.support.v4.app.Fragment implements P
 }
 ```
 
-Select an image only from a camera or gallery...
+Select an image from a camera or gallery only...
 ```java
 // Camera or Gallery only
 PickImage.camera(Activity);
@@ -42,7 +42,7 @@ PickImage.gallery(Activity);
 PickImage.camera(android.support.v4.app.Fragment);
 PickImage.gallery(android.support.v4.app.Fragment);
 ```
-override OnActivityResult..
+Override OnActivityResult..
 Same as Activity or Fragment
 ```java
 @Override
@@ -67,7 +67,7 @@ PickImage.cameraWithCrop(android.support.v4.app.Fragment);
 PickImage.galleryWithCrop(android.support.v4.app.Fragment);
 ```
 
-override OnActivityResult..
+Override OnActivityResult..
 Same as Activity or Fragment
 ```java
 @Override
