@@ -34,7 +34,7 @@ public class SampleFragment extends android.support.v4.app.Fragment implements P
 }
 ```
 
-Select an image from a camera or gallery only...
+### Select an image from a camera or gallery only...
 ```java
 // Camera or Gallery only
 PickImage.camera(Activity);
@@ -58,7 +58,7 @@ Same as Activity or Fragment
     }
 ```
 
-Select and crop image
+### Select and crop image
 ```java
 // Camera or Gallery & Cropper
 PickImage.cameraWithCrop(Activity);
@@ -92,7 +92,7 @@ Build a CropRequest to start aosp cropper.
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
 public void startCropAfterImagePicked() {
     CropRequest.Builder builder = new CropRequest.Builder(this);
-    builder.aspectRatio(aspectRatio); // ex) "x : y"
+    builder.aspectRatio(aspectRatio); // ex) "aspect-x : aspect-y"
     builder.outputSize(outputSize);   // ex) "width * height
     builder.scale(true);
     CropRequest request = builder.build();
