@@ -2,6 +2,7 @@
 You can pick images from your default camera or default gallery. 
 Also You can get the cropped selected image by default cropper.
 
+
 ## Installation
 
 Download:
@@ -12,9 +13,10 @@ dependencies {
 ```
 This library depends on Android Support Library `27.0.2` so you should use `compileSdkVersion 27` or higher.
 
+
 ## How to use
 
-Your Activity or Fragmrent(v4) implement the PickImage.OnPickedPhotoUriCallback
+Your Activity or Fragmrent(v4) implement the PickImage.OnPickedPhotoUriCallback to get result.
 ```java
 public class SampleActivity extends Activity implements PickImage.OnPickedPhotoUriCallback {
     @Override
@@ -90,19 +92,14 @@ Build a CropRequest to start aosp cropper.
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
 public void startCropAfterImagePicked() {
     CropRequest.Builder builder = new CropRequest.Builder(this);
-    String aspectRatio = mAspectRatioEditText.getText().toString();
-    if (!TextUtils.isEmpty(aspectRatio)) {
-        builder.aspectRatio(aspectRatio);
-    }
-    String outputSize = mOutputSizeEditText.getText().toString();
-    if (!TextUtils.isEmpty(outputSize)) {
-        builder.outputSize(outputSize);
-    }
+    builder.aspectRatio(aspectRatio); // ex) "x : y"
+    builder.outputSize(outputSize);   // ex) "width * height
     builder.scale(true);
     CropRequest request = builder.build();
     PickImage.crop(this, request);
 }
 ```
+
 Finally,
 You can receive selected image Uri. If contentUri is null, the image pick failed.
 ```java
@@ -114,7 +111,10 @@ public void onReceivePickedPhotoUri(int resultCode, @Nullable Uri contentUri) {
 ```
 
 
-### License
+
+
+
+## License
 <pre>
 Copyright 2017 SEOJAEHWA
 
