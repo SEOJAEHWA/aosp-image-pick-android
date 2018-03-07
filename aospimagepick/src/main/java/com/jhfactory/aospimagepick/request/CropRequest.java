@@ -94,7 +94,6 @@ public class CropRequest extends ImagePickRequest {
             if (ratioArray.length != 2) {
                 throw new IllegalArgumentException("Image aspect ratio String is not suitable. ex) \"16:9\" >>" + aspectRatio);
             }
-            // TODO: output x, y 와 aspect ratio 값이 있다면 비율이 동일한지 체크하고 맞지 않을 경우 에러를 출력
             this.mAspectX = Integer.valueOf(ratioArray[0]);
             this.mAspectY = Integer.valueOf(ratioArray[1]);
             return this;
