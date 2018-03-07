@@ -3,6 +3,7 @@ package com.jhfactory.aospimagepick;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -23,87 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class ImagePickUtils {
+public final class ImagePickUtils {
 
     private static final String TAG = ImagePickUtils.class.getSimpleName();
-
-    /**
-     * @param context       context
-     * @param fileExtension file extension
-     * @return file Uri that cropped image would be stored
-     */
-    @Nullable
-    public static Uri getImageTargetUri(Context context, String fileExtension) {
-        try {
-            final String extension = "." + fileExtension;
-            File photoFile = createTempImageFileOnExternal(context, extension);
-            return getUriForFile(context, photoFile);
-//            return Uri.fromFile(photoFile);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    @Nullable
-    public static Uri getImageTargetUri2(Context context, String fileExtension) {
-        try {
-            final String extension = "." + fileExtension;
-            File photoFile = createTempImageFileOnExternal(context, extension);
-//            return getUriForFile(context, photoFile);
-            return Uri.fromFile(photoFile);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /**
-     * @param context context
-     * @return file Uri that cropped image would be stored
-     */
-    @Nullable
-    public static Uri getImageTargetUri(Context context) {
-        return getImageTargetUri(context, "jpg");
-    }
-
-    /**
-     * @param context context
-     * @param file    absolute photo path File
-     * @return Uri from file
-     */
-    private static Uri getUriForFile(Context context, File file) {
-        String authority = context.getPackageName() + ".fileprovider";
-        Log.d(TAG, "authority: " + authority);
-        return FileProvider.getUriForFile(context, authority, file);
-    }
-
-    /**
-     * Create image file that would be saved temporary.
-     *
-     * @param context   context
-     * @param extension file extension name
-     * @return File that has been created.
-     * @throws IOException Exception
-     */
-    private static File createTempImageFileOnExternal(Context context, String extension) throws IOException {
-        final String pattern = "yyyyMMdd_HHmmss";
-        String timeStamp = new SimpleDateFormat(pattern, Locale.getDefault()).format(new Date());
-        String imageFileName = timeStamp + "_";
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        return File.createTempFile(imageFileName, extension, storageDir);
-    }
-
-    /**
-     * Delete image file that was saved temporary.
-     *
-     * @param context  context
-     * @param filePath file path
-     * @return If delete file success, return true. If not, return false.
-     */
-    @SuppressWarnings("unused")
-    public static boolean deleteImageFileFromExternal(Context context, String filePath) {
-        // TODO: Does file delete automatically? Not sure yet.
-        return false;
-    }
 
     /**
      * get bytes from content uri.
@@ -113,7 +36,7 @@ public class ImagePickUtils {
      * @return byte array read from the inputStream.
      * @throws IOException ioexception
      */
-    public static byte[] getBytes(@NonNull Context context, Uri contentUri) throws IOException {
+    static byte[] getBytes(@NonNull Context context, Uri contentUri) throws IOException {
         ParcelFileDescriptor parcelFileDescriptor = context.getContentResolver().openFileDescriptor(contentUri, "r");
         if (parcelFileDescriptor == null) {
             return null;
@@ -145,7 +68,7 @@ public class ImagePickUtils {
      * @param contentUri file uri
      * @return get file name from uri
      */
-    public static String getFileNameFromUri(@NonNull Context context, Uri contentUri) {
+    static String getFileNameFromUri(@NonNull Context context, Uri contentUri) {
         if (context.getContentResolver() == null) {
             return null;
         }
@@ -166,7 +89,7 @@ public class ImagePickUtils {
      * @param context    context
      * @param contentUri file uri
      */
-    public static void dumpImageMetaData(@NonNull Context context, Uri contentUri) {
+     static void dumpImageMetaData(@NonNull Context context, Uri contentUri) {
         Cursor cursor = context.getContentResolver().query(contentUri, null, null, null, null, null);
         try {
             if (cursor != null && cursor.moveToFirst()) {

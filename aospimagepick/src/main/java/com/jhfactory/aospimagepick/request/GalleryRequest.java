@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
@@ -31,8 +30,7 @@ public class GalleryRequest extends ImagePickRequest {
      * @return first image uri
      */
     public static Uri pickSinglePhotoUri(@NonNull Intent data) {
-        List<Uri> imgList = pickPhotoUris(data);
-        return imgList.get(0);
+        return pickPhotoUris(data).get(0);
     }
 
     /**

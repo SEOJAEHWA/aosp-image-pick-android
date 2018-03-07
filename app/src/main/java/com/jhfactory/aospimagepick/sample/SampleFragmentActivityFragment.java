@@ -19,11 +19,8 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
 import com.jhfactory.aospimagepick.CropAfterImagePicked;
-import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.PickImage;
 import com.jhfactory.aospimagepick.request.CropRequest;
-
-import java.io.IOException;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -45,9 +42,7 @@ public class SampleFragmentActivityFragment extends Fragment implements View.OnC
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         final View root = inflater.inflate(R.layout.fragment_sample_fragment, container, false);
-
         root.findViewById(R.id.abtn_run_capture_intent).setOnClickListener(this);
         root.findViewById(R.id.abtn_run_gallery_intent).setOnClickListener(this);
         mPickedPhotoView = root.findViewById(R.id.aiv_picked_image);
@@ -125,18 +120,23 @@ public class SampleFragmentActivityFragment extends Fragment implements View.OnC
             PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP,
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
     public void startCropAfterImagePicked() {
-        CropRequest.Builder builder = new CropRequest.Builder(this);
         String aspectRatio = mAspectRatioEditText.getText().toString();
+        String outputSize = mOutputSizeEditText.getText().toString();
+        if (TextUtils.isEmpty(aspectRatio) && TextUtils.isEmpty(outputSize)) {
+            PickImage.crop(this);
+            return;
+        }
+
+        CropRequest.Builder builder = new CropRequest.Builder(this);
         if (!TextUtils.isEmpty(aspectRatio)) {
             builder.aspectRatio(aspectRatio);
         }
-        String outputSize = mOutputSizeEditText.getText().toString();
         if (!TextUtils.isEmpty(outputSize)) {
             builder.outputSize(outputSize);
         }
         builder.scale(true);
         CropRequest request = builder.build();
-        PickImage.crop(this, request);
+        PickImage.crop(request);
     }
 
     @Override
@@ -159,30 +159,28 @@ public class SampleFragmentActivityFragment extends Fragment implements View.OnC
         }
         Log.i(TAG, "[showPickedPhotoInfo] Uri scheme: " + contentUri.getScheme());
         Log.i(TAG, "[showPickedPhotoInfo] getLastPathSegment: " + contentUri.getLastPathSegment());
-        if (TextUtils.equals(contentUri.getScheme(), "content")) {
-            ImagePickUtils.dumpImageMetaData(getContext(), contentUri);
-        }
-        try {
-            byte[] bytes = ImagePickUtils.getBytes(getContext(), contentUri);
-            if (bytes != null) {
-                String readableFileSize;
-                readableFileSize = Formatter.formatFileSize(getContext(), bytes.length);
-                Log.i(TAG, "[showPickedPhotoInfo] Size: " + readableFileSize);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        byte[] bytes = PickImage.getBytes(getContext(), contentUri);
+        if (bytes != null) {
+            String readableFileSize;
+            readableFileSize = Formatter.formatFileSize(getContext(), bytes.length);
+            Log.i(TAG, "[showPickedPhotoInfo] Size: " + readableFileSize);
         }
     }
 
     private void showPickedPhoto(@NonNull Uri contentUri) {
         if (getContext() == null) {
-            Log.e(TAG, "Context is null. Cannot get a picked photo file name.");
+            Log.e(TAG, "Context is null. Cannot show a picked photo on view.");
             return;
         }
-        String fileName = ImagePickUtils.getFileNameFromUri(getContext(), contentUri);
+        String fileName = PickImage.getFileName(getContext(), contentUri);
         Log.i(TAG, "-- [showPickedPhoto] Image file name: " + fileName);
-        GlideApp.with(this)
-                .load(contentUri)
-                .into(mPickedPhotoView);
+        byte[] bytes = PickImage.getBytes(getContext(), contentUri);
+        if (bytes != null) {
+            GlideApp.with(this)
+                    .load(bytes)
+                    .into(mPickedPhotoView);
+        } else {
+            throw new RuntimeException("Failed to get picked image bytes.");
+        }
     }
 }

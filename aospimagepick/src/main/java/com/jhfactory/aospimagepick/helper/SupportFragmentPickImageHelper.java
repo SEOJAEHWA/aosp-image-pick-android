@@ -14,6 +14,9 @@ import android.util.Log;
 import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.R;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  *
  */
@@ -25,21 +28,40 @@ public final class SupportFragmentPickImageHelper extends PickImageHelper<Fragme
         super(host);
     }
 
+    @Nullable
     @Override
     public Uri requestOpenCamera(int requestCode) {
-        Uri targetUri = ImagePickUtils.getImageTargetUri(getContext());
+        try {
+            File photoFile = HelperUtils.createTempImageFileOnExternal(getContext());
+            final Uri targetUri = HelperUtils.getUriForFile(getContext(), photoFile);
+            startAospCamera(targetUri, requestCode);
+            return Uri.fromFile(photoFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Nullable
+    @Override
+    public Uri requestOpenCameraWithCrop(int requestCode) {
+        final Uri targetUri = HelperUtils.getImageTargetUri(getContext());
+        startAospCamera(targetUri, requestCode);
+        return targetUri;
+    }
+
+    private void startAospCamera(@Nullable Uri targetUri, int requestCode) {
         Log.d(TAG, "Target Uri: " + targetUri);
         if (targetUri == null) {
             Log.e(TAG, "Target Uri is null. return selected Uri.");
-            return null;
+            throw new RuntimeException("Target Uri is null. return selected Uri.");
         }
         Intent intent = getCameraIntent(targetUri);
         if (intent == null) {
             Log.e(TAG, "Camera intent is null. Cannot launch camera app.");
-            return null;
+            throw new RuntimeException("Camera intent is null. Cannot launch camera app.");
         }
         getHost().startActivityForResult(intent, requestCode);
-        return targetUri;
     }
 
     @Override
@@ -53,10 +75,11 @@ public final class SupportFragmentPickImageHelper extends PickImageHelper<Fragme
         getHost().startActivityForResult(intent, requestCode);
     }
 
+    @Nullable
     @Override
     public Uri requestCropImage(int requestCode, @NonNull Uri currentPhotoUri, @Nullable Bundle extras) {
         final String fileExtension = "." + Bitmap.CompressFormat.JPEG;
-        Uri targetUri = ImagePickUtils.getImageTargetUri2(getContext(), fileExtension);
+        Uri targetUri = HelperUtils.getImageTargetFileUri(getContext(), fileExtension);
         Log.d(TAG, "Current Uri: " + currentPhotoUri);
         Log.d(TAG, "Target Uri: " + targetUri);
         if (targetUri == null) {

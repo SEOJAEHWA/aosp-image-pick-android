@@ -20,11 +20,8 @@ import android.view.View;
 import android.widget.CompoundButton;
 
 import com.jhfactory.aospimagepick.CropAfterImagePicked;
-import com.jhfactory.aospimagepick.ImagePickUtils;
 import com.jhfactory.aospimagepick.PickImage;
 import com.jhfactory.aospimagepick.request.CropRequest;
-
-import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
@@ -123,18 +120,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP,
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
     public void startCropAfterImagePicked() {
-        CropRequest.Builder builder = new CropRequest.Builder(this);
         String aspectRatio = mAspectRatioEditText.getText().toString();
+        String outputSize = mOutputSizeEditText.getText().toString();
+        if (TextUtils.isEmpty(aspectRatio) && TextUtils.isEmpty(outputSize)) {
+            PickImage.crop(this);
+            return;
+        }
+
+        CropRequest.Builder builder = new CropRequest.Builder(this);
         if (!TextUtils.isEmpty(aspectRatio)) {
             builder.aspectRatio(aspectRatio);
         }
-        String outputSize = mOutputSizeEditText.getText().toString();
         if (!TextUtils.isEmpty(outputSize)) {
             builder.outputSize(outputSize);
         }
         builder.scale(true);
         CropRequest request = builder.build();
-        PickImage.crop(this, request);
+        PickImage.crop(request);
     }
 
     @Override
@@ -153,27 +155,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void showPickedPhotoInfo(@NonNull Uri contentUri) {
         Log.i(TAG, "[showPickedPhotoInfo] Uri scheme: " + contentUri.getScheme());
         Log.i(TAG, "[showPickedPhotoInfo] getLastPathSegment: " + contentUri.getLastPathSegment());
-        if (TextUtils.equals(contentUri.getScheme(), "content")) {
-            ImagePickUtils.dumpImageMetaData(this, contentUri);
-        }
-        try {
-            byte[] bytes = ImagePickUtils.getBytes(this, contentUri);
-            if (bytes != null) {
-                String readableFileSize;
-                readableFileSize = Formatter.formatFileSize(this, bytes.length);
-                Log.i(TAG, "[showPickedPhotoInfo] Size: " + readableFileSize);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        byte[] bytes = PickImage.getBytes(this, contentUri);
+        if (bytes != null) {
+            String readableFileSize;
+            readableFileSize = Formatter.formatFileSize(this, bytes.length);
+            Log.i(TAG, "[showPickedPhotoInfo] Size: " + readableFileSize);
         }
     }
 
     private void showPickedPhoto(@NonNull Uri contentUri) {
-        String fileName = ImagePickUtils.getFileNameFromUri(this, contentUri);
+        String fileName = PickImage.getFileName(this, contentUri);
         Log.i(TAG, "-- [showPickedPhoto] Image file name: " + fileName);
-        GlideApp.with(this)
-                .load(contentUri)
-                .into(mPickedPhotoView);
+        byte[] bytes = PickImage.getBytes(this, contentUri);
+        if (bytes != null) {
+            GlideApp.with(this)
+                    .load(bytes)
+                    .into(mPickedPhotoView);
+        } else {
+            throw new RuntimeException("Failed to get picked image bytes.");
+        }
     }
 
     @Override

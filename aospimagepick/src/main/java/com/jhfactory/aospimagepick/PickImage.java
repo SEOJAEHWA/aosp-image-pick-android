@@ -2,10 +2,10 @@ package com.jhfactory.aospimagepick;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -15,6 +15,7 @@ import com.jhfactory.aospimagepick.request.CameraRequest;
 import com.jhfactory.aospimagepick.request.CropRequest;
 import com.jhfactory.aospimagepick.request.GalleryRequest;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -49,12 +50,12 @@ public final class PickImage {
 
     public static void cameraWithCrop(@NonNull Activity host) {
         CameraRequest request = new CameraRequest.Builder(host).build();
-        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
+        mCurrentPhotoUri = request.getHelper().requestOpenCameraWithCrop(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
     }
 
     public static void cameraWithCrop(@NonNull Fragment host) {
         CameraRequest request = new CameraRequest.Builder(host).build();
-        mCurrentPhotoUri = request.getHelper().requestOpenCamera(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
+        mCurrentPhotoUri = request.getHelper().requestOpenCameraWithCrop(REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP);
     }
 
     public static void gallery(@NonNull Activity host) {
@@ -77,16 +78,19 @@ public final class PickImage {
         request.getHelper().requestOpenGallery(REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP);
     }
 
-    public static void crop(@NonNull Activity host, CropRequest cropRequest) {
-        crop(host, mCurrentPhotoUri, cropRequest);
+    public static void crop(@NonNull Activity host) {
+        crop(mCurrentPhotoUri, getDefaultCropRequest(new CropRequest.Builder(host)));
     }
 
-    public static void crop(@NonNull Fragment host, CropRequest cropRequest) {
-        crop(host, mCurrentPhotoUri, cropRequest);
+    public static void crop(@NonNull Fragment host) {
+        crop(mCurrentPhotoUri, getDefaultCropRequest(new CropRequest.Builder(host)));
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public static void crop(@NonNull Activity host, Uri currentPhotoUri, CropRequest cropRequest) {
+    public static void crop(CropRequest cropRequest) {
+        crop(mCurrentPhotoUri, cropRequest);
+    }
+
+    private static void crop(Uri currentPhotoUri, CropRequest cropRequest) {
         if (currentPhotoUri == null) {
             Log.e(TAG, "CurrentPhotoUri is null.");
             return;
@@ -95,14 +99,9 @@ public final class PickImage {
                 currentPhotoUri, cropRequest.toBundle());
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public static void crop(@NonNull Fragment host, Uri currentPhotoUri, CropRequest cropRequest) {
-        if (currentPhotoUri == null) {
-            Log.e(TAG, "CurrentPhotoUri is null.");
-            return;
-        }
-        mCurrentPhotoUri = cropRequest.getHelper().requestCropImage(REQ_CODE_CROP_IMAGE,
-                currentPhotoUri, cropRequest.toBundle());
+    private static CropRequest getDefaultCropRequest(@NonNull CropRequest.Builder builder) {
+        builder.scale(true);
+        return builder.build();
     }
 
     public static void onActivityResult(int requestCode, int resultCode, Intent data, @NonNull Object callback) {
@@ -194,5 +193,20 @@ public final class PickImage {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    @Nullable
+    public static byte[] getBytes(@NonNull Context context, @NonNull Uri contentUri) {
+        try {
+            return ImagePickUtils.getBytes(context, contentUri);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Nullable
+    public static String getFileName(@NonNull Context context, @NonNull Uri contentUri) {
+        return ImagePickUtils.getFileNameFromUri(context, contentUri);
     }
 }

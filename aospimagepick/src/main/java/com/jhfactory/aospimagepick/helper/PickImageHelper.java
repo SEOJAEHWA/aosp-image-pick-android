@@ -65,10 +65,10 @@ public abstract class PickImageHelper<T> {
      */
     @Nullable
     Intent getCameraIntent(@NonNull Uri targetImageUri) {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, targetImageUri);
-            return takePictureIntent;
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getContext().getPackageManager()) != null) {
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, targetImageUri);
+            return intent;
         }
         return null;
     }
@@ -99,9 +99,14 @@ public abstract class PickImageHelper<T> {
 
     public abstract Context getContext();
 
+    @Nullable
     public abstract Uri requestOpenCamera(int requestCode);
+
+    @Nullable
+    public abstract Uri requestOpenCameraWithCrop(int requestCode);
 
     public abstract void requestOpenGallery(int requestCode);
 
+    @Nullable
     public abstract Uri requestCropImage(int requestCode, Uri currentPhotoUri, Bundle extras);
 }
