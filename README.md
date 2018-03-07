@@ -8,7 +8,7 @@ Also You can get the cropped selected image by default cropper.
 Download:
 ```groovy
 dependencies {
-    implementation 'com.jhfactory:aospimagepick:0.9.1'
+    implementation 'com.jhfactory:aospimagepick:0.9.3'
 }
 ```
 This library depends on Android Support Library `27.0.2` so you should use `compileSdkVersion 27` or higher.
@@ -32,6 +32,30 @@ public class SampleFragment extends android.support.v4.app.Fragment implements P
  
     }
 }
+```
+And set up FileProvider...
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myapp">
+    <application
+        ...>
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.myapp.fileprovider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
+        ...
+    </application>
+</manifest>
+```
+```xml
+<paths>
+    <external-path path="images/" name="myimages" />
+</paths>
 ```
 
 ### Select an image from a camera or gallery only...
@@ -109,7 +133,11 @@ public void onReceivePickedPhotoUri(int resultCode, @Nullable Uri contentUri) {
     Log.i(TAG, "[onReceivePickedPhotoUri] onReceiveImageUri: " + contentUri);
 }
 ```
-
+How to get image bytes & image file name from content uri for server uploading?
+```java
+String fileName = PickImage.getFileName(context, uri);
+byte[] bytes = bytePickImage.getBytes(context, uri);
+```
 
 
 
