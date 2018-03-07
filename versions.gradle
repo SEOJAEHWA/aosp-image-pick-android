@@ -6,8 +6,8 @@ build_version.target_sdk = 27
 build_version.build_tools = "27.0.3"
 build_version.code = 1
 build_version.name = "1.0.0"
-build_version.lib_code = 2
-build_version.lib_name = "0.9.1"
+build_version.lib_code = 3
+build_version.lib_name = "0.9.3"
 ext.build_version = build_version
 
 def bintray = [:]
