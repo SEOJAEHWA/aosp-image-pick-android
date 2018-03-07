@@ -70,16 +70,16 @@ Override OnActivityResult..
 Same as Activity or Fragment
 ```java
 @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
-            case PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
-                PickImage.onActivityResult(requestCode, resultCode, data, this);
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-        }
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    switch (requestCode) {
+        case PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA:
+        case PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY:
+            PickImage.onActivityResult(requestCode, resultCode, data, this);
+            break;
+        default:
+            super.onActivityResult(requestCode, resultCode, data);
     }
+}
 ```
 
 ### Select and crop image
