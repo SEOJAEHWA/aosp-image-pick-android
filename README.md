@@ -136,7 +136,7 @@ public void onReceivePickedPhotoUri(int resultCode, @Nullable Uri contentUri) {
 ### How to get image bytes & image file name from content uri for server uploading?
 ```java
 String fileName = PickImage.getFileName(context, uri);
-byte[] bytes = bytePickImage.getBytes(context, uri);
+byte[] bytes = PickImage.getBytes(context, uri);
 ```
 
 
