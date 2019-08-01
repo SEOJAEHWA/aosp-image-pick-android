@@ -9,7 +9,7 @@ import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
 public final class CameraRequest extends ImagePickRequest {
 
-    CameraRequest(PickImageHelper helper) {
+    private CameraRequest(PickImageHelper helper) {
         super(helper);
     }
 

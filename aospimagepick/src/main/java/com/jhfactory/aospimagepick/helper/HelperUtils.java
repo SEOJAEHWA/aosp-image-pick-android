@@ -35,6 +35,7 @@ final class HelperUtils {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     @Nullable
     static Uri getImageTargetFileUri(Context context, String fileExtension) {
         try {
@@ -52,7 +53,7 @@ final class HelperUtils {
      */
     @Nullable
     static Uri getImageTargetUri(Context context) {
-        return getImageTargetUri(context, Bitmap.CompressFormat.JPEG.name());
+        return getImageTargetUri(context, "jpg");
     }
 
     /**
@@ -74,6 +75,7 @@ final class HelperUtils {
      * @return File that has been created.
      * @throws IOException Exception
      */
+    @SuppressWarnings("WeakerAccess")
     static File createTempImageFileOnExternal(Context context, String extension) throws IOException {
         final String pattern = "yyyyMMdd_HHmmss";
         String timeStamp = new SimpleDateFormat(pattern, Locale.getDefault()).format(new Date());
@@ -83,7 +85,8 @@ final class HelperUtils {
     }
 
     static File createTempImageFileOnExternal(Context context) throws IOException {
-        return createTempImageFileOnExternal(context, Bitmap.CompressFormat.JPEG.name());
+        final String jpecFileExtension = ".jpg";
+        return createTempImageFileOnExternal(context, jpecFileExtension);
     }
 
     /**

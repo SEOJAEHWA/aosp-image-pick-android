@@ -44,18 +44,14 @@ public abstract class PickImageHelper<T> {
      */
     @Nullable
     Intent getGalleryIntent() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-        } else {
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
-        }
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
         intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+
+//        Intent intent = new Intent();
+//        intent.setAction(Intent.ACTION_GET_CONTENT);
+
+        intent.setType("image/*");
         if (intent.resolveActivity(getContext().getPackageManager()) != null) {
             return intent;
         }

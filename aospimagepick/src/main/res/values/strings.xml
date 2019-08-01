@@ -2,5 +2,5 @@
     <string name="app_name">ImagePick</string>
     <string name="activity_name_activity">ImagePick-Activity</string>
     <string name="activity_name_fragment">ImagePick-Fragment</string>
-    <string name="pick_image_gallery_chooser">Choose</string>
+    <string name="pick_image_gallery_chooser">Choose gallery</string>
 </resources>

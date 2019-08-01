@@ -30,19 +30,19 @@ public class CropRequest extends ImagePickRequest {
     private static final String KEY_SHOW_WHEN_LOCKED = "showWhenLocked";
     private static final String KEY_OUTPUT_FORMAT = "outputFormat";
 
-    private int mOutputX = 0;
-    private int mOutputY = 0;
-    private int mAspectX = 0;
-    private int mAspectY = 0;
-    private boolean mScale = true;
-    private boolean mReturnData = false;
+    private int mOutputX;
+    private int mOutputY;
+    private int mAspectX;
+    private int mAspectY;
+    private boolean mScale;
+    private boolean mReturnData;
     //        private Uri mExtraOutput = null;
-    private Bitmap.CompressFormat mOutputFormat = Bitmap.CompressFormat.JPEG;
+    private Bitmap.CompressFormat mOutputFormat;
     //        private float mSpotlightX = 0;
     //        private float mSpotlightY = 0;
 
-    CropRequest(PickImageHelper helper, int outputX, int outputY, int aspectX, int aspectY,
-                boolean scale, boolean returnData, Bitmap.CompressFormat outputFormat) {
+    private CropRequest(PickImageHelper helper, int outputX, int outputY, int aspectX, int aspectY,
+                        boolean scale, boolean returnData, Bitmap.CompressFormat outputFormat) {
         super(helper);
         this.mOutputX = outputX;
         this.mOutputY = outputY;

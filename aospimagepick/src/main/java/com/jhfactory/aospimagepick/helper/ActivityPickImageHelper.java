@@ -64,7 +64,7 @@ public final class ActivityPickImageHelper extends PickImageHelper<Activity> {
     public void requestOpenGallery(int requestCode) {
         Intent intent = getGalleryIntent();
         if (intent == null) {
-            Log.e(TAG, "Gallery intent is null. Cannot launch camera app.");
+            Log.e(TAG, "Gallery intent is null. Cannot launch gallery app.");
             return;
         }
         intent = Intent.createChooser(intent, getContext().getString(R.string.pick_image_gallery_chooser));

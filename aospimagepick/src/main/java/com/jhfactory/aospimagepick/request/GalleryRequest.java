@@ -21,7 +21,7 @@ public class GalleryRequest extends ImagePickRequest {
 
     private static final String TAG = GalleryRequest.class.getSimpleName();
 
-    GalleryRequest(PickImageHelper helper) {
+    private GalleryRequest(PickImageHelper helper) {
         super(helper);
     }
 
@@ -44,27 +44,17 @@ public class GalleryRequest extends ImagePickRequest {
     @NonNull
     private static List<Uri> pickPhotoUris(@NonNull Intent data) {
         List<Uri> imgList = new ArrayList<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            final ClipData clipData = data.getClipData();
-            if (clipData != null) {
-                for (int i = 0; i < clipData.getItemCount(); i++) {
-                    Uri uri = clipData.getItemAt(i).getUri();
-                    Log.d(TAG, "### [getClipData] URI: " + uri);
-                    imgList.add(uri);
-                }
-            } else {
-                Uri uri = data.getData();
-                Log.d(TAG, "### [getData] URI: " + uri);
+        final ClipData clipData = data.getClipData();
+        if (clipData != null) {
+            for (int i = 0; i < clipData.getItemCount(); i++) {
+                Uri uri = clipData.getItemAt(i).getUri();
+                Log.d(TAG, "### [getClipData] URI: " + uri);
                 imgList.add(uri);
             }
         } else {
-            final ArrayList<Uri> imageUris = data.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-            if (imageUris != null) {
-                for (Uri uri : imageUris) {
-                    Log.d(TAG, "### URI: " + uri);
-                    imgList.add(uri);
-                }
-            }
+            Uri uri = data.getData();
+            Log.d(TAG, "### [getData] URI: " + uri);
+            imgList.add(uri);
         }
         return imgList;
     }

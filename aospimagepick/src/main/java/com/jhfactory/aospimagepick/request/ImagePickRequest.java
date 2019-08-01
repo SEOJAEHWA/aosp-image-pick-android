@@ -9,7 +9,7 @@ public class ImagePickRequest {
 
     private PickImageHelper mHelper;
 
-    public ImagePickRequest(PickImageHelper helper) {
+    ImagePickRequest(PickImageHelper helper) {
         this.mHelper = helper;
     }
 
