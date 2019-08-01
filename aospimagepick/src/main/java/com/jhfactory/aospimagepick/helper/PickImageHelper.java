@@ -8,8 +8,10 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import androidx.fragment.app.Fragment;
 
 import com.jhfactory.aospimagepick.request.CropRequest;
 
@@ -21,7 +23,7 @@ public abstract class PickImageHelper<T> {
         return new ActivityPickImageHelper(host);
     }
 
-    public static PickImageHelper<? extends android.support.v4.app.Fragment> newInstance(android.support.v4.app.Fragment host) {
+    public static PickImageHelper<? extends Fragment> newInstance(Fragment host) {
         return new SupportFragmentPickImageHelper(host);
     }
 

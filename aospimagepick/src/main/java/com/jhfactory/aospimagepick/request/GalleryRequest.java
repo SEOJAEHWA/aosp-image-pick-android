@@ -6,9 +6,11 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
+
+import androidx.fragment.app.Fragment;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
@@ -74,7 +76,7 @@ public class GalleryRequest extends ImagePickRequest {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 
-        public Builder(@Nullable android.support.v4.app.Fragment host) {
+        public Builder(@Nullable Fragment host) {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 

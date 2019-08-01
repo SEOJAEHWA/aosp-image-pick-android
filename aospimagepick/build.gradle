@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion build_version.target_sdk
+    compileSdkVersion 29
 
     defaultConfig {
-        minSdkVersion build_version.min_sdk
-        targetSdkVersion build_version.target_sdk
-        versionCode build_version.aospimagepick_code
-        versionName build_version.aospimagepick_name
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 4
+        versionName "0.9.3"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -22,10 +22,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation deps.support.appcompat
-    testImplementation deps.junit
-    androidTestImplementation deps.atsl.runner
-    androidTestImplementation deps.espresso.core
+    implementation 'androidx.appcompat:appcompat:1.1.0-rc01'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
 apply from: 'bintray.gradle'

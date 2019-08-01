@@ -3,13 +3,6 @@ package com.jhfactory.aospimagepick.sample;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.Group;
-import android.support.design.widget.TextInputEditText;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.AppCompatCheckBox;
-import android.support.v7.widget.AppCompatImageView;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
@@ -18,6 +11,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.Fragment;
+
+import com.bumptech.glide.Glide;
+import com.google.android.material.textfield.TextInputEditText;
 import com.jhfactory.aospimagepick.CropAfterImagePicked;
 import com.jhfactory.aospimagepick.PickImage;
 import com.jhfactory.aospimagepick.request.CropRequest;
@@ -176,7 +178,7 @@ public class SampleFragmentActivityFragment extends Fragment implements View.OnC
         Log.i(TAG, "-- [showPickedPhoto] Image file name: " + fileName);
         byte[] bytes = PickImage.getBytes(getContext(), contentUri);
         if (bytes != null) {
-            GlideApp.with(this)
+            Glide.with(this)
                     .load(bytes)
                     .into(mPickedPhotoView);
         } else {

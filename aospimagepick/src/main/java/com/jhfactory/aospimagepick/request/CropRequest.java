@@ -4,9 +4,11 @@ package com.jhfactory.aospimagepick.request;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import androidx.fragment.app.Fragment;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
@@ -68,7 +70,7 @@ public class CropRequest extends ImagePickRequest {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 
-        public Builder(@Nullable android.support.v4.app.Fragment host) {
+        public Builder(@Nullable Fragment host) {
             this.mHelper = PickImageHelper.newInstance(host);
         }
 

@@ -1,7 +1,7 @@
 package com.jhfactory.aospimagepick.request;
 
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 
