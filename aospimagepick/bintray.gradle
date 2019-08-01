@@ -1,60 +1,20 @@
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
-version bintray_info.version
-group bintray_info.group
-
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += configurations.compile
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-
-    failOnError = false
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
+version "0.9.5"
+group "com.jhfactory"
 
 publishing {
     publications {
-        library(MavenPublication) {
-            groupId bintray_info.group
-            artifactId bintray_info.artifactId
-            version bintray_info.version
-
-            artifact "$buildDir/outputs/aar/$bintray_info.artifactId-release.aar"
-            artifact sourcesJar
-            artifact javadocJar
+        Production(MavenPublication) {
+            artifact "$buildDir/outputs/aar/aospimagepick-release.aar"
+            groupId
+            artifactId "aospimagepick"
+            version this.version
 
             pom.withXml {
-                def root = asNode()
-                root.appendNode('name', bintray_info.project_name)
-                root.appendNode('description', bintray_info.project_desc)
-                root.appendNode('url', bintray_info.url)
-                root.appendNode('inceptionYear', '2017')
-                def license = root.appendNode('licenses').appendNode('license')
-                license.appendNode('name', 'The Apache Software License, Version 2.0')
-                license.appendNode('url', 'http://www.apache.org/licenses/LICENSE-2.0.txt')
-                license.appendNode('distribution', 'repo')
-                def developer = root.appendNode('developers').appendNode('developer')
-                developer.appendNode('name', 'SEOJAEHWA')
-                def scm = root.appendNode('scm')
-                scm.appendNode('connection', bintray_info.vcs_url)
-                scm.appendNode('url', bintray_info.url)
+                def dependenciesNode = asNode().appendNode('dependencies')
 
-                def dependenciesNode = root.appendNode('dependencies')
                 // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
                 configurations.implementation.allDependencies.each {
                     // Ensure dependencies such as fileTree are not included in the pom.
@@ -71,32 +31,25 @@ publishing {
 }
 
 bintray {
-    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-    publications = ['library']
+    user = project.hasProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
+    publications = ['Production']
     configurations = ['archives']
     override = true
     pkg {
-        repo = bintray_info.project_name
-        name = bintray_info.artifactId
-//        description = "Pick image by Using AOSP Camera, Gallery, Crop"
+        repo = "generic"
+        name = "aospimagepick"
+        desc = "Pick image by Using AOSP Camera, Gallery, Crop"
         publish = true
         publicDownloadNumbers = true
-        userOrg = bintray_info.user_org
         licenses = ['Apache-2.0']
-        vcsUrl = bintray_info.vcs_url
-
+        vcsUrl = "https://github.com/SEOJAEHWA/aosp-image-pick-android.git"
+        dryRun = true
         version {
-            name = bintray_info.version
+            name = this.version
+            desc = "Migrated project : ${this.version}"
             released = new Date()
-//            vcsTag = bintray_info.version
+            vcsTag = this.version
         }
     }
-}
-
-afterEvaluate { project ->
-    def pomTask = "generatePomFileForLibraryPublication"
-
-    // Convenience task to prepare everything we need for releases
-    task prepareArtifacts(dependsOn: [javadocJar, sourcesJar, assembleRelease, pomTask]) {}
 }
