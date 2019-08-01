@@ -25,6 +25,8 @@ import com.jhfactory.aospimagepick.CropAfterImagePicked;
 import com.jhfactory.aospimagepick.PickImage;
 import com.jhfactory.aospimagepick.request.CropRequest;
 
+import java.util.Objects;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         PickImage.OnPickedPhotoUriCallback {
@@ -64,14 +66,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            currentPhotoUri = savedInstanceState.getParcelable("uri");
-            if (currentPhotoUri != null) {
-                Log.i(TAG, "onRestoreInstanceState::CurrentUri: " + currentPhotoUri);
-                showPickedPhoto(currentPhotoUri);
-            }
+        currentPhotoUri = savedInstanceState.getParcelable("uri");
+        if (currentPhotoUri != null) {
+            Log.i(TAG, "onRestoreInstanceState::CurrentUri: " + currentPhotoUri);
+            showPickedPhoto(currentPhotoUri);
         }
     }
 
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         if (currentPhotoUri != null) {
             outState.putParcelable("uri", currentPhotoUri);
         }
@@ -122,8 +122,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             PickImage.REQ_CODE_PICK_IMAGE_FROM_GALLERY_WITH_CROP,
             PickImage.REQ_CODE_PICK_IMAGE_FROM_CAMERA_WITH_CROP})
     public void startCropAfterImagePicked() {
-        String aspectRatio = mAspectRatioEditText.getText().toString();
-        String outputSize = mOutputSizeEditText.getText().toString();
+        String aspectRatio = Objects.requireNonNull(mAspectRatioEditText.getText()).toString();
+        String outputSize = Objects.requireNonNull(mOutputSizeEditText.getText()).toString();
         if (TextUtils.isEmpty(aspectRatio) && TextUtils.isEmpty(outputSize)) {
             PickImage.crop(this);
             return;
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
