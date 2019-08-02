@@ -8,10 +8,10 @@ Also You can get the cropped selected image by default cropper.
 Download:
 ```groovy
 dependencies {
-    implementation 'com.jhfactory:aospimagepick:0.9.3'
+    implementation 'com.jhfactory:aospimagepick:0.9.7'
 }
 ```
-This library depends on Android Support Library `27.0.2` so you should use `compileSdkVersion 27` or higher.
+This library depends on Android Support Library `28.0.0` so you should use `compileSdkVersion 28` or higher.
 
 
 ## How to use
@@ -54,7 +54,9 @@ And set up FileProvider...
 ```
 ```xml
 <paths>
-    <external-path path="images/" name="myimages" />
+    <external-path
+        name="captured_images"
+        path="Android/data/{packageName}/files/Pictures" />
 </paths>
 ```
 
@@ -144,7 +146,7 @@ byte[] bytes = PickImage.getBytes(context, uri);
 
 ## License
 <pre>
-Copyright 2017 SEOJAEHWA
+Copyright 2019 SEOJAEHWA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
