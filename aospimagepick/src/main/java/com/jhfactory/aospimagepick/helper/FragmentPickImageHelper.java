@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -14,8 +15,6 @@ import androidx.annotation.Nullable;
  * This helper will be used later.
  */
 public final class FragmentPickImageHelper extends PickImageHelper<Fragment> {
-
-    private static final String TAG = FragmentPickImageHelper.class.getSimpleName();
 
     FragmentPickImageHelper(Fragment host) {
         super(host);
