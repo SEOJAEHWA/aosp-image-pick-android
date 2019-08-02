@@ -2,14 +2,14 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 version "0.9.5"
-group "com.jhfactory"
+group "aospimagepick"
 
 publishing {
     publications {
         Production(MavenPublication) {
             artifact "$buildDir/outputs/aar/aospimagepick-release.aar"
-            groupId
-            artifactId "aospimagepick"
+            groupId "com.jhfactory"
+            artifactId "aospimagepick" // package name
             version this.version
 
             pom.withXml {
@@ -31,25 +31,44 @@ publishing {
 }
 
 bintray {
-    user = project.hasProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
-    key = project.hasProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
-    publications = ['Production']
+    user = "seojaehwa"
+    key = property('bintrayApiKey')
+
     configurations = ['archives']
+    publications = ['Production']
+
+    dryRun = false
+    publish = true
     override = true
+
     pkg {
-        repo = "generic"
-        name = "aospimagepick"
+        repo = "aosp-image-pick-android" // repository
+        name = "aospimagepick" // package name
         desc = "Pick image by Using AOSP Camera, Gallery, Crop"
-        publish = true
         publicDownloadNumbers = true
         licenses = ['Apache-2.0']
         vcsUrl = "https://github.com/SEOJAEHWA/aosp-image-pick-android.git"
-        dryRun = true
         version {
             name = this.version
             desc = "Migrated project : ${this.version}"
             released = new Date()
             vcsTag = this.version
         }
+    }
+}
+
+// JCenter publish
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+task findConventions {
+    doLast {
+        println project.getConvention()
     }
 }
