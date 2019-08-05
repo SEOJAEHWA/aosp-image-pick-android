@@ -6,9 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
+import android.support.annotation.NonNull;
 import android.text.format.Formatter;
 import android.util.Log;
 

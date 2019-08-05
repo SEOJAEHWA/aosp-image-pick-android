@@ -3,6 +3,15 @@ package com.jhfactory.aospimagepick.sample;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.constraint.Group;
+import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatCheckBox;
+import android.support.v7.widget.AppCompatImageView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
@@ -11,17 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatCheckBox;
-import androidx.appcompat.widget.AppCompatImageView;
-import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.Group;
-import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.textfield.TextInputEditText;
 import com.jhfactory.aospimagepick.CropAfterImagePicked;
 import com.jhfactory.aospimagepick.PickImage;
 import com.jhfactory.aospimagepick.request.CropRequest;
@@ -67,12 +67,8 @@ public class SampleFragmentActivity extends AppCompatActivity {
             mCropCheckBox = root.findViewById(R.id.acb_do_crop);
             mCropCheckBox.setChecked(false);
             mCropGroup.setVisibility(View.GONE);
-            mCropCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mCropGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                }
-            });
+            mCropCheckBox.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    mCropGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE));
             mAspectRatioEditText = root.findViewById(R.id.tie_aspect_ratio);
             mOutputSizeEditText = root.findViewById(R.id.tie_output_size);
             return root;

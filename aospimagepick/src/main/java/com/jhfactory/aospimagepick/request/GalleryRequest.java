@@ -5,12 +5,11 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 
-import androidx.fragment.app.Fragment;
 
 import com.jhfactory.aospimagepick.helper.PickImageHelper;
 

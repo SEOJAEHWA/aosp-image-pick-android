@@ -4,8 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
-import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
+import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
