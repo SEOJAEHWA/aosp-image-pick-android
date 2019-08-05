@@ -11,7 +11,7 @@ Download:
 ```groovy
 dependencies {
     // Sorry.. Not support it now.
-    ~~implementation 'com.jhfactory:aospimagepick:0.9.6'~~
+    implementation 'com.jhfactory:aospimagepick:0.9.6'
 }
 ```
 This library depends on Android Support Library `28.0.0` so you should use `compileSdkVersion 28` or higher.
