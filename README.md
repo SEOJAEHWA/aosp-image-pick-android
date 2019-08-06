@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/seojaehwa/aosp-image-pick-android/aospimagepick/images/download.svg?version=0.9.6) ](https://bintray.com/seojaehwa/aosp-image-pick-android/aospimagepick/0.9.6/link)
+
 
 # aosp-image-pick-android
 You can pick images from your default camera or default gallery. 
@@ -10,6 +10,7 @@ Also You can get the cropped selected image by default cropper.
 Download:
 ```groovy
 dependencies {
+    // Sorry.. Not support it now.
     implementation 'com.jhfactory:aospimagepick:0.9.6'
 }
 ```
