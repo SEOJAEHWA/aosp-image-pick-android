@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 version "0.9.6"
-group "aospimagepick"
+group "com.jhfactory"
 
 publishing {
     publications {
