@@ -10,7 +10,6 @@ Also You can get the cropped selected image by default cropper.
 Download:
 ```groovy
 dependencies {
-    // Sorry.. Not support it now.
     implementation 'com.jhfactory:aospimagepick:0.9.6'
 }
 ```
