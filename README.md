@@ -1,4 +1,6 @@
 
+#Deprecated this project.
+
 
 # aosp-image-pick-android
 You can pick images from your default camera or default gallery. 
